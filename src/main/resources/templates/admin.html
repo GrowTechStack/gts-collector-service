@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>관리자 - DevFeed</title>
+</head>
+<body>
+    <section>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">RSS 출처 관리</h2>
+            <button class="btn btn-primary" onclick="collectNow()">즉시 수집 실행</button>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>사이트명</th>
+                            <th>RSS URL</th>
+                            <th>상태</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="source : ${sources}">
+                            <td class="fw-bold" th:text="${source.siteName}">토스 테크</td>
+                            <td th:text="${source.rssUrl}">https://...</td>
+                            <td>
+                                <span class="badge" th:classappend="${source.active} ? 'bg-success' : 'bg-secondary'" 
+                                      th:text="${source.active ? '활성' : '비활성'}">활성</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" th:onclick="'deleteSource(' + ${source.id} + ')'">삭제</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <h4 class="fw-bold">새 출처 등록</h4>
+            <div class="card p-4 shadow-sm border-0">
+                <form id="addSourceForm" class="row g-3">
+                    <div class="col-md-5">
+                        <input type="text" class="form-control" id="siteName" placeholder="사이트 이름" required>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="url" class="form-control" id="rssUrl" placeholder="RSS URL" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-dark w-100">등록하기</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto text-primary">알림</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body" id="toastMessage"></div>
+            </div>
+        </div>
+
+        <script>
+            async function collectNow() {
+                if(!confirm('즉시 수집을 실행하시겠습니까?')) return;
+                const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+                try {
+                    const response = await fetch('/api/v1/collector/collect', { method: 'POST' });
+                    const result = await response.json();
+                    document.getElementById('toastMessage').innerText = result.success ? 
+                        `${result.data}개의 콘텐츠를 수집했습니다!` : '오류: ' + result.error.message;
+                    toast.show();
+                    if(result.success) setTimeout(() => location.reload(), 2000);
+                } catch (e) { alert('통신 오류'); }
+            }
+
+            async function deleteSource(id) {
+                if(!confirm('삭제하시겠습니까?')) return;
+                await fetch(`/api/v1/rss-sources/${id}`, { method: 'DELETE' });
+                location.reload();
+            }
+
+            document.getElementById('addSourceForm').onsubmit = async (e) => {
+                e.preventDefault();
+                await fetch('/api/v1/rss-sources', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        siteName: document.getElementById('siteName').value, 
+                        rssUrl: document.getElementById('rssUrl').value, 
+                        active: true 
+                    })
+                });
+                location.reload();
+            };
+        </script>
+    </section>
+</body>
+</html>

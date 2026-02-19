@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>최신 피드 - DevFeed</title>
+    <style>
+        /* 기본 카드 디자인 */
+        .content-card { 
+            position: relative;
+            z-index: 1;
+            border-radius: 12px; 
+            border: 1px solid #eee; 
+            transition: all 0.2s; 
+            background-color: #ffffff; 
+        }
+        .content-card:hover { 
+            border-color: #0d6efd; 
+            background-color: #fcfdff; 
+        }
+
+        /* 읽은 텍스트 기본 스타일 */
+        .is-read-text { color: #888 !important; }
+    </style>
+</head>
+<body>
+    <section>
+        <div class="row">
+            <div class="col-12 mx-auto" style="max-width: 900px;">
+                
+                <!-- 분리된 컴포넌트 사용 (태그 필터) -->
+                <div th:replace="~{fragments/components :: tagNav(${currentTag})}"></div>
+
+                <!-- 콘텐츠 리스트 -->
+                <div th:each="content : ${contents.content}" class="content-item mb-3" th:data-id="${content.id}">
+                    <div class="card content-card shadow-sm p-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-primary bg-opacity-10 text-primary" th:text="${content.siteName}">출처</span>
+                                <small class="text-muted" th:text="${#temporals.format(content.publishedAt, 'yyyy.MM.dd')}">2024.02.19</small>
+                            </div>
+                            
+                            <h5 class="card-title fw-bold mb-2">
+                                <a th:href="@{/contents/{id}(id=${content.id})}" 
+                                   class="text-decoration-none text-dark stretched-link" 
+                                   th:text="${content.title}"
+                                   th:onclick="'markAsRead(' + ${content.id} + ')'">제목</a>
+                            </h5>
+                            
+                            <p class="card-text text-muted small mb-3 text-truncate-2" th:text="${content.summary}">내용 요약...</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span th:each="tag : ${#strings.arraySplit(content.tags, ',')}" 
+                                          class="badge rounded-pill bg-light text-secondary me-1" 
+                                          th:text="${tag}">태그</span>
+                                </div>
+                                <small class="text-muted">조회 [[${content.viewCount}]]</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 페이징 -->
+                <nav th:if="${contents.totalPages > 1}" class="mt-5 mb-5">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${contents.first} ? 'disabled'">
+                            <a class="page-link" th:href="@{/(page=${contents.number - 1}, tag=${currentTag})}">이전</a>
+                        </li>
+                        <li th:each="i : ${#numbers.sequence(0, contents.totalPages - 1)}" 
+                            class="page-item" th:classappend="${i == contents.number} ? 'active'">
+                            <a class="page-link" th:href="@{/(page=${i}, tag=${currentTag})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${contents.last} ? 'disabled'">
+                            <a class="page-link" th:href="@{/(page=${contents.number + 1}, tag=${currentTag})}">다음</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <script>
+            function getReadIds() {
+                const ids = localStorage.getItem('read_content_ids');
+                return ids ? JSON.parse(ids).map(Number) : [];
+            }
+            function markAsRead(id) {
+                const ids = getReadIds();
+                if (!ids.includes(Number(id))) {
+                    ids.push(Number(id));
+                    localStorage.setItem('read_content_ids', JSON.stringify(ids));
+                }
+            }
+            function updateReadStatus() {
+                const readIds = getReadIds();
+                document.querySelectorAll('.content-item').forEach(item => {
+                    const id = Number(item.getAttribute('data-id'));
+                    const card = item.querySelector('.content-card');
+                    const title = item.querySelector('.card-title');
+                    
+                    if (readIds.includes(id)) {
+                        // JS로 직접 강력하게 스타일 주입
+                        card.style.setProperty('background-color', '#f2f2f2', 'important');
+                        card.style.setProperty('opacity', '0.8', 'important');
+                        if (title) title.classList.add('is-read-text');
+                    }
+                });
+            }
+            document.addEventListener('DOMContentLoaded', updateReadStatus);
+            window.addEventListener('pageshow', updateReadStatus);
+        </script>
+    </section>
+</body>
+</html>

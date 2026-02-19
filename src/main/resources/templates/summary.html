@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title th:text="${content.title} + ' - DevFeed'">게시글 요약</title>
+</head>
+<body>
+    <section>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- 뒤로가기 -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">← 목록으로 돌아가기</a></li>
+                    </ol>
+                </nav>
+
+                <div class="card shadow-sm border-0 p-4 p-md-5">
+                    <!-- 헤더 정보 -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-primary bg-opacity-10 text-primary me-2" th:text="${content.siteName}">사이트명</span>
+                            <small class="text-muted" th:text="${#temporals.format(content.publishedAt, 'yyyy년 MM월 dd일')}">발행일</small>
+                        </div>
+                        <h1 class="fw-bold mb-3" th:text="${content.title}">게시글 제목</h1>
+                        <div class="text-muted small">
+                            조회수 [[${content.viewCount}]] &bull; 
+                            <span th:each="tag : ${#strings.arraySplit(content.tags, ',')}" 
+                                  class="me-1" th:text="'#' + ${tag}">#태그</span>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 text-light">
+
+                    <!-- 요약 본문 -->
+                    <div class="content-body mb-5 fs-5 leading-relaxed text-secondary" style="line-height: 1.8;">
+                        <p th:text="${content.summary}">요약 내용이 표시됩니다.</p>
+                    </div>
+
+                    <!-- 원문 보기 버튼 -->
+                    <div class="text-center mt-5 pt-4 border-top">
+                        <p class="text-muted small mb-3">더 자세한 내용이 궁금하신가요?</p>
+                        <a th:href="${content.originalUrl}" target="_blank" class="btn btn-primary btn-lg px-5 fw-bold">원문 보기</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script th:inline="javascript">
+            // 페이지 진입 시 해당 ID를 읽음 처리합니다.
+            document.addEventListener('DOMContentLoaded', () => {
+                const id = [[${content.id}]];
+                const idsStr = localStorage.getItem('read_content_ids');
+                let ids = idsStr ? JSON.parse(idsStr) : [];
+                if (!ids.includes(id)) {
+                    ids.push(id);
+                    localStorage.setItem('read_content_ids', JSON.stringify(ids));
+                }
+            });
+        </script>
+    </section>
+</body>
+</html>
