@@ -3,10 +3,10 @@ server:
 
 spring:
   application:
-    name: devfeed
+    name: GrowTechStack
 
   datasource:
-    url: jdbc:h2:file:./devfeed.db;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:file:./GrowTechStack.db;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
     password:

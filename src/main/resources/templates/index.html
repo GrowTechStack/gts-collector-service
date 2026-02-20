@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::section})}">
 <head>
-    <title>최신 피드 - DevFeed</title>
+    <title>최신 피드 - GrowTechStack</title>
     <style>
         /* 기본 카드 디자인 */
         .content-card { 
@@ -17,8 +17,20 @@
             background-color: #fcfdff; 
         }
 
-        /* 읽은 텍스트 기본 스타일 */
-        .is-read-text { color: #888 !important; }
+        /* 읽은 게시글 */
+        .content-item.is-read .stretched-link::after {
+            background-color: #efefef !important;
+            z-index: -1;
+            border-radius: 12px;
+        }
+        .content-item.is-read .content-card {
+            background-color: transparent !important;
+            border-color: #ddd !important;
+        }
+        .content-item.is-read .card-title { color: #999 !important; }
+        .content-item.is-read .card-text { color: #bbb !important; }
+
+        /* 태그 칩 스타일 (fragments/components.html 에서 가져옴) */
     </style>
 </head>
 <body>
@@ -95,12 +107,10 @@
                     const id = Number(item.getAttribute('data-id'));
                     const card = item.querySelector('.content-card');
                     const title = item.querySelector('.card-title');
-                    
                     if (readIds.includes(id)) {
-                        // JS로 직접 강력하게 스타일 주입
                         card.style.setProperty('background-color', '#f2f2f2', 'important');
                         card.style.setProperty('opacity', '0.8', 'important');
-                        if (title) title.classList.add('is-read-text');
+                        if (title) title.style.setProperty('color', '#888', 'important');
                     }
                 });
             }

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::section})}">
 <head>
-    <title th:text="${content.title} + ' - DevFeed'">게시글 요약</title>
+    <title th:text="${content.title} + ' - GrowTechStack'">게시글 요약</title>
 </head>
 <body>
     <section>
@@ -45,7 +45,6 @@
             </div>
         </div>
         <script th:inline="javascript">
-            // 페이지 진입 시 해당 ID를 읽음 처리합니다.
             document.addEventListener('DOMContentLoaded', () => {
                 const id = [[${content.id}]];
                 const idsStr = localStorage.getItem('read_content_ids');
