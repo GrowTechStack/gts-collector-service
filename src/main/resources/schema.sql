@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS rss_sources (
     site_name VARCHAR(100) NOT NULL,
     rss_url VARCHAR(500) NOT NULL UNIQUE,
     logo_url VARCHAR(500),              -- 사이트 로고 아이콘 URL
+    site_url VARCHAR(500),              -- 사이트 접속 URL (예: https://toss.tech)
     active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

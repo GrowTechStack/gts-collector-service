@@ -1,5 +1,7 @@
 package com.gts.collector.domain.content.controller;
 
+import com.gts.collector.domain.content.dto.RssSourceStatsResponse;
+import com.gts.collector.domain.content.repository.ContentRepository;
 import com.gts.collector.domain.content.service.ContentService;
 import com.gts.collector.domain.content.service.RssSourceService;
 import jakarta.servlet.http.Cookie;
@@ -26,6 +28,7 @@ public class ContentViewController {
 
     private final ContentService contentService;
     private final RssSourceService rssSourceService;
+    private final ContentRepository contentRepository;
 
     /**
      * 메인 피드 페이지
@@ -46,7 +49,18 @@ public class ContentViewController {
                         (existing, replacement) -> existing
                 ));
         model.addAttribute("siteLogos", siteLogos);
-        
+
+        java.util.List<RssSourceStatsResponse> sourceStats = rssSourceService.getAllSources().stream()
+                .map(s -> new RssSourceStatsResponse(
+                        s.id(), s.siteName(), s.rssUrl(), s.siteUrl(), s.logoUrl(), s.active(),
+                        contentRepository.countBySiteName(s.siteName()),
+                        contentRepository.sumViewCountBySiteName(s.siteName()),
+                        contentRepository.findLatestPublishedAtBySiteName(s.siteName()).orElse(null)
+                ))
+                .sorted((a, b) -> Long.compare(b.totalViewCount(), a.totalViewCount()))
+                .toList();
+        model.addAttribute("rssSources", sourceStats);
+
         return "index";
     }
 

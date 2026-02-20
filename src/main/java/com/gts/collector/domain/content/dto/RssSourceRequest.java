@@ -19,6 +19,9 @@ public record RssSourceRequest(
     @Schema(description = "사이트 로고 URL", example = "https://toss.tech/favicon.ico")
     String logoUrl,
 
+    @Schema(description = "사이트 접속 URL", example = "https://toss.tech")
+    String siteUrl,
+
     @Schema(description = "활성화 여부", defaultValue = "true")
     boolean active
 ) {}

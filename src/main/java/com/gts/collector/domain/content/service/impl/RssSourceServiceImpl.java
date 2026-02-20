@@ -45,6 +45,7 @@ public class RssSourceServiceImpl implements RssSourceService {
                 .siteName(request.siteName())
                 .rssUrl(request.rssUrl())
                 .logoUrl(request.logoUrl())
+                .siteUrl(request.siteUrl())
                 .active(request.active())
                 .build();
         
@@ -57,7 +58,7 @@ public class RssSourceServiceImpl implements RssSourceService {
         RssSource source = rssSourceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RSS_SOURCE_NOT_FOUND));
         
-        source.update(request.siteName(), request.rssUrl(), request.logoUrl(), request.active());
+        source.update(request.siteName(), request.rssUrl(), request.logoUrl(), request.siteUrl(), request.active());
         return RssSourceResponse.from(source);
     }
 

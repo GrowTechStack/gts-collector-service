@@ -4,6 +4,9 @@ import com.gts.collector.domain.content.entity.Content;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /** 
@@ -25,4 +28,13 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
      * 특정 태그를 포함하는 콘텐츠 목록을 페이징 조회합니다.
      */
     Page<Content> findAllByTagsContaining(String tag, Pageable pageable);
+
+    @Query("SELECT COUNT(c) FROM Content c WHERE c.siteName = :siteName")
+    long countBySiteName(@Param("siteName") String siteName);
+
+    @Query("SELECT COALESCE(SUM(c.viewCount), 0) FROM Content c WHERE c.siteName = :siteName")
+    long sumViewCountBySiteName(@Param("siteName") String siteName);
+
+    @Query("SELECT MAX(c.publishedAt) FROM Content c WHERE c.siteName = :siteName")
+    Optional<LocalDateTime> findLatestPublishedAtBySiteName(@Param("siteName") String siteName);
 }

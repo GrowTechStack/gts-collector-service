@@ -27,20 +27,24 @@ public class RssSource {
 
     private String logoUrl;  // 사이트 로고 아이콘 URL
 
+    private String siteUrl;  // 사이트 접속 URL (예: https://toss.tech)
+
     private boolean active;  // 활성화 여부
 
     @Builder
-    public RssSource(String siteName, String rssUrl, String logoUrl, boolean active) {
+    public RssSource(String siteName, String rssUrl, String logoUrl, String siteUrl, boolean active) {
         this.siteName = siteName;
         this.rssUrl = rssUrl;
         this.logoUrl = logoUrl;
+        this.siteUrl = siteUrl;
         this.active = active;
     }
 
-    public void update(String siteName, String rssUrl, String logoUrl, boolean active) {
+    public void update(String siteName, String rssUrl, String logoUrl, String siteUrl, boolean active) {
         this.siteName = siteName;
         this.rssUrl = rssUrl;
         this.logoUrl = logoUrl;
+        this.siteUrl = siteUrl;
         this.active = active;
     }
 }

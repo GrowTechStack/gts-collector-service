@@ -16,7 +16,9 @@ public record RssSourceResponse(
     String rssUrl,
     @Schema(description = "사이트 로고 URL")
     String logoUrl,
-    @Schema(description = "?성????")
+    @Schema(description = "사이트 접속 URL")
+    String siteUrl,
+    @Schema(description = "활성화 여부")
     boolean active
 ) {
     public static RssSourceResponse from(RssSource source) {
@@ -25,6 +27,7 @@ public record RssSourceResponse(
             source.getSiteName(),
             source.getRssUrl(),
             source.getLogoUrl(),
+            source.getSiteUrl(),
             source.isActive()
         );
     }
