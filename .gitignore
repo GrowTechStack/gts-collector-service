@@ -35,6 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
-#GEMINI.md
-#plan.md
-#prompt.txt
+CLAUDE.md
+GEMINI.md
+plan.md
+prompt.txt
