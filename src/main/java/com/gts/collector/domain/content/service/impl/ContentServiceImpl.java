@@ -17,8 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.gts.collector.domain.content.dto.SiteStatsDto;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -103,5 +106,22 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public Optional<LocalDateTime> findLatestPublishedAtBySiteName(String siteName) {
         return contentRepository.findLatestPublishedAtBySiteName(siteName);
+    }
+
+    /**
+     * 모든 사이트 통계를 단일 GROUP BY 쿼리로 조회하여 Map으로 변환합니다.
+     * N+1 방지 목적으로 사용됩니다.
+     */
+    @Override
+    public Map<String, SiteStatsDto> findAllSiteStatsMap() {
+        Map<String, SiteStatsDto> statsMap = new HashMap<>();
+        for (Object[] row : contentRepository.findAllSiteStats()) {
+            String siteName = (String) row[0];
+            long postCount = ((Number) row[1]).longValue();
+            long totalViewCount = ((Number) row[2]).longValue();
+            LocalDateTime latestPublishedAt = (LocalDateTime) row[3];
+            statsMap.put(siteName, new SiteStatsDto(postCount, totalViewCount, latestPublishedAt));
+        }
+        return statsMap;
     }
 }

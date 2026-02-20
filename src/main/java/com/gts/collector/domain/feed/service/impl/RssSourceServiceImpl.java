@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gts.collector.domain.content.dto.SiteStatsDto;
 import java.util.List;
+import java.util.Map;
 
 /**
  * RSS 출처 관리 서비스 구현체
@@ -35,22 +37,29 @@ public class RssSourceServiceImpl implements RssSourceService {
 
     /**
      * 각 출처별 콘텐츠 수, 총 조회수, 최신 발행일을 포함한 통계 목록을 반환합니다.
+     * 단일 GROUP BY 쿼리로 통계를 한 번에 조회하여 N+1 문제를 방지합니다.
      * 총 조회수 기준 내림차순 정렬됩니다.
      */
     @Override
     public List<RssSourceStatsResponse> getAllSourcesWithStats() {
+        Map<String, SiteStatsDto> statsMap = contentService.findAllSiteStatsMap();
+
         return rssSourceRepository.findAll().stream()
-                .map(s -> new RssSourceStatsResponse(
-                        s.getId(),
-                        s.getSiteName(),
-                        s.getRssUrl(),
-                        s.getSiteUrl(),
-                        s.getLogoUrl(),
-                        s.isActive(),
-                        contentService.countBySiteName(s.getSiteName()),
-                        contentService.sumViewCountBySiteName(s.getSiteName()),
-                        contentService.findLatestPublishedAtBySiteName(s.getSiteName()).orElse(null)
-                ))
+                .map(s -> {
+                    SiteStatsDto stats = statsMap.getOrDefault(
+                            s.getSiteName(), new SiteStatsDto(0, 0, null));
+                    return new RssSourceStatsResponse(
+                            s.getId(),
+                            s.getSiteName(),
+                            s.getRssUrl(),
+                            s.getSiteUrl(),
+                            s.getLogoUrl(),
+                            s.isActive(),
+                            stats.postCount(),
+                            stats.totalViewCount(),
+                            stats.latestPublishedAt()
+                    );
+                })
                 .sorted((a, b) -> Long.compare(b.totalViewCount(), a.totalViewCount()))
                 .toList();
     }

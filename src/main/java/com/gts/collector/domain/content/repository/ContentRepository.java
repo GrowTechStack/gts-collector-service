@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 /** 
@@ -36,12 +37,29 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
     @Query("SELECT c FROM Content c WHERE c.title LIKE %:keyword% OR c.summary LIKE %:keyword%")
     Page<Content> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
+    /**
+     * 특정 사이트명의 총 콘텐츠 수를 반환합니다.
+     */
     @Query("SELECT COUNT(c) FROM Content c WHERE c.siteName = :siteName")
     long countBySiteName(@Param("siteName") String siteName);
 
+    /**
+     * 특정 사이트명의 총 조회수 합계를 반환합니다.
+     */
     @Query("SELECT COALESCE(SUM(c.viewCount), 0) FROM Content c WHERE c.siteName = :siteName")
     long sumViewCountBySiteName(@Param("siteName") String siteName);
 
+    /**
+     * 특정 사이트명의 가장 최근 발행일을 반환합니다.
+     */
     @Query("SELECT MAX(c.publishedAt) FROM Content c WHERE c.siteName = :siteName")
     Optional<LocalDateTime> findLatestPublishedAtBySiteName(@Param("siteName") String siteName);
+
+    /**
+     * 모든 사이트의 통계(콘텐츠 수, 총 조회수, 최신 발행일)를 siteName 기준으로 그룹핑하여 한 번에 조회합니다.
+     * N+1 문제 방지를 위해 getAllSourcesWithStats()에서 사용합니다.
+     */
+    @Query("SELECT c.siteName, COUNT(c), COALESCE(SUM(c.viewCount), 0), MAX(c.publishedAt) " +
+           "FROM Content c GROUP BY c.siteName")
+    List<Object[]> findAllSiteStats();
 }

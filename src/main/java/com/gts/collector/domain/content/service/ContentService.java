@@ -51,4 +51,10 @@ public interface ContentService {
      * 특정 사이트명의 가장 최근 발행일을 반환합니다.
      */
     java.util.Optional<java.time.LocalDateTime> findLatestPublishedAtBySiteName(String siteName);
+
+    /**
+     * 모든 사이트의 통계를 한 번의 쿼리로 조회하여 siteName 기준 Map으로 반환합니다.
+     * N+1 방지용으로 사용합니다.
+     */
+    java.util.Map<String, com.gts.collector.domain.content.dto.SiteStatsDto> findAllSiteStatsMap();
 }
