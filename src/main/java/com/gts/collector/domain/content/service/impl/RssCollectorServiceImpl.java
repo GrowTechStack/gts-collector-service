@@ -79,6 +79,8 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         if (existingContent.isPresent()) {
             Content content = existingContent.get();
             // thumbnailUrl이 null이고 새로 추출한 값이 있으면 업데이트
+            // TODO: H2 파일 모드에서 dirty checking 및 명시적 save() 호출 시에도 업데이트가 반영되지 않는 문제 있음
+            //       MySQL로 DB 전환 후 정상 동작 여부 재확인 및 적용 필요
             if (content.getThumbnailUrl() == null && thumbnailUrl != null) {
                 content.updateMetadata(siteName, tags, thumbnailUrl);
                 contentRepository.save(content);
