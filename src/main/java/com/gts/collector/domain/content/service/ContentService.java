@@ -19,6 +19,11 @@ public interface ContentService {
     Page<ContentSummaryResponse> getContents(String tag, Pageable pageable);
 
     /**
+     * 키워드로 콘텐츠를 검색합니다. (title, summary 대상)
+     */
+    Page<ContentSummaryResponse> searchContents(String keyword, Pageable pageable);
+
+    /**
      * 특정 콘텐츠를 상세 조회합니다.
      */
     ContentResponse getContent(Long id);

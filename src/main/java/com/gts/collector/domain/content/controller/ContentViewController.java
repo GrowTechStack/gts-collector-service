@@ -34,11 +34,13 @@ public class ContentViewController {
      * 메인 피드 페이지
      */
     @GetMapping("/")
-    public String index(Model model, 
+    public String index(Model model,
                         @RequestParam(required = false) String tag,
+                        @RequestParam(required = false) String q,
                         @PageableDefault(size = 12, sort = "publishedAt", direction = Sort.Direction.DESC) Pageable pageable) {
         model.addAttribute("contents", contentService.getContents(tag, pageable));
         model.addAttribute("currentTag", tag);
+        model.addAttribute("q", q);
         
         // 사이트별 로고 URL 맵 추가
         java.util.Map<String, String> siteLogos = rssSourceService.getAllSources().stream()

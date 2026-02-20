@@ -47,6 +47,19 @@ public class ContentController {
         return ApiResult.success(contentService.getContents(tag, pageable));
     }
 
+    @Operation(summary = "콘텐츠 검색", description = "제목 및 요약 내용을 기준으로 키워드 검색합니다.")
+    @Parameters({
+            @Parameter(name = "q", description = "검색 키워드", in = ParameterIn.QUERY),
+            @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "0")),
+            @Parameter(name = "size", description = "한 페이지당 개수", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "10"))
+    })
+    @GetMapping("/search")
+    public ApiResult<Page<ContentSummaryResponse>> searchContents(
+            @RequestParam String q,
+            @Parameter(hidden = true) @PageableDefault(size = 10, sort = "publishedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ApiResult.success(contentService.searchContents(q, pageable));
+    }
+
     @Operation(summary = "콘텐츠 상세 조회", description = "특정 콘텐츠의 상세 내용을 조회하고 조회수를 증가시킵니다.")
     @GetMapping("/{id}")
     public ApiResult<ContentResponse> getContent(

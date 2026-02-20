@@ -35,6 +35,12 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
+    public Page<ContentSummaryResponse> searchContents(String keyword, Pageable pageable) {
+        return contentRepository.searchByKeyword(keyword, pageable)
+                .map(ContentSummaryResponse::from);
+    }
+
+    @Override
     public ContentResponse getContent(Long id) {
         Content content = contentRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CONTENT_NOT_FOUND));

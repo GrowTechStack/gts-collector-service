@@ -29,6 +29,13 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
      */
     Page<Content> findAllByTagsContaining(String tag, Pageable pageable);
 
+    /**
+     * 제목 또는 요약에 키워드가 포함된 콘텐츠를 페이징 조회합니다.
+     * TODO: MySQL 전환 후 FULLTEXT INDEX + MATCH AGAINST 방식으로 교체 권장
+     */
+    @Query("SELECT c FROM Content c WHERE c.title LIKE %:keyword% OR c.summary LIKE %:keyword%")
+    Page<Content> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
     @Query("SELECT COUNT(c) FROM Content c WHERE c.siteName = :siteName")
     long countBySiteName(@Param("siteName") String siteName);
 
