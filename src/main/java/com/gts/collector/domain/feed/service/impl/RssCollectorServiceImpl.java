@@ -1,9 +1,9 @@
-package com.gts.collector.domain.content.service.impl;
+package com.gts.collector.domain.feed.service.impl;
 
 import com.gts.collector.domain.content.entity.Content;
 import com.gts.collector.domain.content.entity.ContentType;
 import com.gts.collector.domain.content.repository.ContentRepository;
-import com.gts.collector.domain.content.service.RssCollectorService;
+import com.gts.collector.domain.feed.service.RssCollectorService;
 import com.gts.collector.global.error.ErrorCode;
 import com.gts.collector.global.error.exception.BusinessException;
 import com.rometools.rome.feed.synd.SyndEnclosure;
@@ -27,7 +27,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * RSS 수집 서비스 구현체
+ * RSS 피드 수집 서비스 구현체.
+ * Rome 라이브러리를 사용하여 RSS/Atom 피드를 파싱하고 Content 엔티티로 저장합니다.
  */
 @Slf4j
 @Service
@@ -35,16 +36,21 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class RssCollectorServiceImpl implements RssCollectorService {
 
+    /** HTTP 요청 시 사용하는 User-Agent (일부 사이트의 봇 차단 우회) */
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 GrowTechStackBot/1.0";
 
     private final ContentRepository contentRepository;
 
+    /**
+     * 지정된 RSS URL에서 피드를 파싱하고 신규 콘텐츠를 저장합니다.
+     * 기존에 저장된 URL은 중복 저장되지 않으며, 썸네일이 없는 경우에만 업데이트합니다.
+     */
     @Override
     @Transactional
     public int collect(String rssUrl, String siteName) {
         log.info("Starting RSS collection from: {} ({})", siteName, rssUrl);
         int savedCount = 0;
-        
+
         try {
             HttpURLConnection connection = (HttpURLConnection) new URL(rssUrl).openConnection();
             connection.setRequestProperty("User-Agent", USER_AGENT);
@@ -59,7 +65,7 @@ public class RssCollectorServiceImpl implements RssCollectorService {
                     savedCount++;
                 }
             }
-            
+
             log.info("Finished RSS collection for {}. Processed {} entries.", siteName, savedCount);
             return savedCount;
         } catch (Exception e) {
@@ -68,6 +74,12 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         }
     }
 
+    /**
+     * RSS 엔트리를 Content로 저장하거나, 기존 콘텐츠의 썸네일을 업데이트합니다.
+     * - 신규 URL: 새로 저장 후 true 반환
+     * - 기존 URL + 썸네일 null: 썸네일 업데이트 후 true 반환
+     * - 기존 URL + 썸네일 있음: 스킵 후 false 반환
+     */
     private boolean saveOrUpdate(SyndEntry entry, String siteName) {
         String originalUrl = entry.getLink();
         String tags = extractTags(entry);
@@ -78,7 +90,6 @@ public class RssCollectorServiceImpl implements RssCollectorService {
 
         if (existingContent.isPresent()) {
             Content content = existingContent.get();
-            // thumbnailUrl이 null이고 새로 추출한 값이 있으면 업데이트
             // TODO: H2 파일 모드에서 dirty checking 및 명시적 save() 호출 시에도 업데이트가 반영되지 않는 문제 있음
             //       MySQL로 DB 전환 후 정상 동작 여부 재확인 및 적용 필요
             if (content.getThumbnailUrl() == null && thumbnailUrl != null) {
@@ -97,7 +108,7 @@ public class RssCollectorServiceImpl implements RssCollectorService {
                 .siteName(siteName)
                 .thumbnailUrl(thumbnailUrl)
                 .tags(tags)
-                .publishedAt(entry.getPublishedDate() != null ? 
+                .publishedAt(entry.getPublishedDate() != null ?
                         entry.getPublishedDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : null)
                 .commentEnabled(false)
                 .build();
@@ -106,6 +117,15 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         return true;
     }
 
+    /**
+     * RSS 엔트리에서 썸네일 이미지 URL을 추출합니다.
+     * 우선순위:
+     * 1. Enclosures (이미지 타입)
+     * 2. ForeignMarkup - media:content, media:thumbnail, thumbnail 커스텀 태그
+     * 3. content:encoded - preload 링크 또는 img 태그
+     * 4. Description HTML - 첫 번째 img 태그
+     * 5. OG 이미지 fallback (원문 페이지 스크래핑)
+     */
     private String extractThumbnail(SyndEntry entry) {
         // 1. Enclosures 확인 (이미지 타입)
         for (SyndEnclosure enclosure : entry.getEnclosures()) {
@@ -120,13 +140,11 @@ public class RssCollectorServiceImpl implements RssCollectorService {
             String name = element.getName();
             String prefix = element.getNamespacePrefix();
 
-            // media:content, media:thumbnail (표준 Media RSS)
             if ("media".equals(prefix) && ("content".equals(name) || "thumbnail".equals(name))) {
                 String url = element.getAttributeValue("url");
                 if (url != null) return url;
             }
 
-            // <thumbnail> 커스텀 태그 (Kakao Tech 등)
             if ("thumbnail".equals(name) && element.getText() != null && !element.getText().isBlank()) {
                 return element.getText().trim();
             }
@@ -153,9 +171,7 @@ public class RssCollectorServiceImpl implements RssCollectorService {
             String html = entry.getDescription().getValue();
             Pattern imgPattern = Pattern.compile("<img[^>]+src\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>");
             Matcher matcher = imgPattern.matcher(html);
-            if (matcher.find()) {
-                return matcher.group(1);
-            }
+            if (matcher.find()) return matcher.group(1);
         }
 
         // 5. OG 이미지 fallback (RSS에 썸네일 없을 때 원문 페이지에서 추출)
@@ -166,6 +182,10 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         return null;
     }
 
+    /**
+     * 원문 페이지의 HTML에서 og:image 메타 태그 값을 추출합니다.
+     * property/content 속성 순서가 다른 두 가지 패턴을 모두 처리합니다.
+     */
     private String extractOgImage(String url) {
         try {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
@@ -174,6 +194,7 @@ public class RssCollectorServiceImpl implements RssCollectorService {
             connection.setReadTimeout(5000);
 
             String html = new String(connection.getInputStream().readAllBytes());
+
             Pattern ogPattern = Pattern.compile("<meta[^>]+property=['\"]og:image['\"][^>]+content=['\"]([^'\"]+)['\"]");
             Matcher matcher = ogPattern.matcher(html);
             if (matcher.find()) return matcher.group(1);
@@ -189,6 +210,11 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         return null;
     }
 
+    /**
+     * RSS 엔트리의 카테고리 정보에서 태그를 추출합니다.
+     * 카테고리가 없으면 제목과 설명 텍스트를 분석하여 backend, frontend, ai, design 태그를 자동 부여합니다.
+     * 아무것도 해당하지 않으면 'tech'를 기본 태그로 사용합니다.
+     */
     private String extractTags(SyndEntry entry) {
         String categories = entry.getCategories().stream()
                 .map(category -> category.getName().toLowerCase())
@@ -196,9 +222,9 @@ public class RssCollectorServiceImpl implements RssCollectorService {
 
         if (!categories.isEmpty()) return categories;
 
-        String contentText = (entry.getTitle() + " " + 
+        String contentText = (entry.getTitle() + " " +
                 (entry.getDescription() != null ? entry.getDescription().getValue() : "")).toLowerCase();
-        
+
         StringBuilder autoTags = new StringBuilder();
         if (contentText.contains("backend") || contentText.contains("server") || contentText.contains("spring")) autoTags.append("backend,");
         if (contentText.contains("frontend") || contentText.contains("react") || contentText.contains("javascript")) autoTags.append("frontend,");

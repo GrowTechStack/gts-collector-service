@@ -1,10 +1,12 @@
-package com.gts.collector.domain.content.service.impl;
+package com.gts.collector.domain.feed.service.impl;
 
-import com.gts.collector.domain.content.dto.RssSourceRequest;
-import com.gts.collector.domain.content.dto.RssSourceResponse;
-import com.gts.collector.domain.content.entity.RssSource;
-import com.gts.collector.domain.content.repository.RssSourceRepository;
-import com.gts.collector.domain.content.service.RssSourceService;
+import com.gts.collector.domain.content.service.ContentService;
+import com.gts.collector.domain.feed.dto.RssSourceRequest;
+import com.gts.collector.domain.feed.dto.RssSourceResponse;
+import com.gts.collector.domain.feed.dto.RssSourceStatsResponse;
+import com.gts.collector.domain.feed.entity.RssSource;
+import com.gts.collector.domain.feed.repository.RssSourceRepository;
+import com.gts.collector.domain.feed.service.RssSourceService;
 import com.gts.collector.global.error.ErrorCode;
 import com.gts.collector.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * RSS 출처 관리 서비스 구현체
@@ -23,12 +24,35 @@ import java.util.stream.Collectors;
 public class RssSourceServiceImpl implements RssSourceService {
 
     private final RssSourceRepository rssSourceRepository;
+    private final ContentService contentService;
 
     @Override
     public List<RssSourceResponse> getAllSources() {
         return rssSourceRepository.findAll().stream()
                 .map(RssSourceResponse::from)
-                .collect(Collectors.toList());
+                .toList();
+    }
+
+    /**
+     * 각 출처별 콘텐츠 수, 총 조회수, 최신 발행일을 포함한 통계 목록을 반환합니다.
+     * 총 조회수 기준 내림차순 정렬됩니다.
+     */
+    @Override
+    public List<RssSourceStatsResponse> getAllSourcesWithStats() {
+        return rssSourceRepository.findAll().stream()
+                .map(s -> new RssSourceStatsResponse(
+                        s.getId(),
+                        s.getSiteName(),
+                        s.getRssUrl(),
+                        s.getSiteUrl(),
+                        s.getLogoUrl(),
+                        s.isActive(),
+                        contentService.countBySiteName(s.getSiteName()),
+                        contentService.sumViewCountBySiteName(s.getSiteName()),
+                        contentService.findLatestPublishedAtBySiteName(s.getSiteName()).orElse(null)
+                ))
+                .sorted((a, b) -> Long.compare(b.totalViewCount(), a.totalViewCount()))
+                .toList();
     }
 
     @Override
@@ -48,7 +72,6 @@ public class RssSourceServiceImpl implements RssSourceService {
                 .siteUrl(request.siteUrl())
                 .active(request.active())
                 .build();
-        
         return RssSourceResponse.from(rssSourceRepository.save(source));
     }
 
@@ -57,7 +80,6 @@ public class RssSourceServiceImpl implements RssSourceService {
     public RssSourceResponse updateSource(Long id, RssSourceRequest request) {
         RssSource source = rssSourceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RSS_SOURCE_NOT_FOUND));
-        
         source.update(request.siteName(), request.rssUrl(), request.logoUrl(), request.siteUrl(), request.active());
         return RssSourceResponse.from(source);
     }

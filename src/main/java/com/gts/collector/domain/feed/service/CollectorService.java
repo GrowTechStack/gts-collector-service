@@ -1,4 +1,4 @@
-package com.gts.collector.domain.content.service;
+package com.gts.collector.domain.feed.service;
 
 /**
  * 콘텐츠 수집 프로세스를 총괄하는 서비스 인터페이스

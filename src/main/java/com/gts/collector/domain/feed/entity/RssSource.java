@@ -1,4 +1,4 @@
-package com.gts.collector.domain.content.entity;
+package com.gts.collector.domain.feed.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -20,16 +20,16 @@ public class RssSource {
     private Long id;
 
     @Column(nullable = false)
-    private String siteName; // 사이트 이름
+    private String siteName;
 
     @Column(nullable = false, unique = true)
-    private String rssUrl;   // RSS 피드 URL
+    private String rssUrl;
 
-    private String logoUrl;  // 사이트 로고 아이콘 URL
+    private String logoUrl;
 
-    private String siteUrl;  // 사이트 접속 URL (예: https://toss.tech)
+    private String siteUrl;
 
-    private boolean active;  // 활성화 여부
+    private boolean active;
 
     @Builder
     public RssSource(String siteName, String rssUrl, String logoUrl, String siteUrl, boolean active) {
@@ -40,6 +40,7 @@ public class RssSource {
         this.active = active;
     }
 
+    /** 출처 정보를 전체 업데이트합니다. */
     public void update(String siteName, String rssUrl, String logoUrl, String siteUrl, boolean active) {
         this.siteName = siteName;
         this.rssUrl = rssUrl;

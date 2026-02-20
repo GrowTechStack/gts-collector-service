@@ -1,6 +1,6 @@
-package com.gts.collector.domain.content.repository;
+package com.gts.collector.domain.feed.repository;
 
-import com.gts.collector.domain.content.entity.CollectorLog;
+import com.gts.collector.domain.feed.entity.CollectorLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**

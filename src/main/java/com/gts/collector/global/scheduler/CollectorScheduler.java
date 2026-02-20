@@ -1,6 +1,6 @@
 package com.gts.collector.global.scheduler;
 
-import com.gts.collector.domain.content.service.CollectorService;
+import com.gts.collector.domain.feed.service.CollectorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

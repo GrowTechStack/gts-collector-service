@@ -1,6 +1,6 @@
-package com.gts.collector.domain.content.controller;
+package com.gts.collector.domain.feed.controller;
 
-import com.gts.collector.domain.content.service.CollectorService;
+import com.gts.collector.domain.feed.service.CollectorService;
 import com.gts.collector.global.common.response.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

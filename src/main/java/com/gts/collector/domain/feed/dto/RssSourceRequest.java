@@ -1,4 +1,4 @@
-package com.gts.collector.domain.content.dto;
+package com.gts.collector.domain.feed.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

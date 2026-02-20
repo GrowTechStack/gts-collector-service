@@ -1,6 +1,6 @@
-package com.gts.collector.domain.content.dto;
+package com.gts.collector.domain.feed.dto;
 
-import com.gts.collector.domain.content.entity.RssSource;
+import com.gts.collector.domain.feed.entity.RssSource;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -8,18 +8,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
  */
 @Schema(description = "RSS 출처 정보 응답")
 public record RssSourceResponse(
-    @Schema(description = "ID")
-    Long id,
-    @Schema(description = "사이트 이름")
-    String siteName,
-    @Schema(description = "RSS URL")
-    String rssUrl,
-    @Schema(description = "사이트 로고 URL")
-    String logoUrl,
-    @Schema(description = "사이트 접속 URL")
-    String siteUrl,
-    @Schema(description = "활성화 여부")
-    boolean active
+    @Schema(description = "ID") Long id,
+    @Schema(description = "사이트 이름") String siteName,
+    @Schema(description = "RSS URL") String rssUrl,
+    @Schema(description = "사이트 로고 URL") String logoUrl,
+    @Schema(description = "사이트 접속 URL") String siteUrl,
+    @Schema(description = "활성화 여부") boolean active
 ) {
     public static RssSourceResponse from(RssSource source) {
         return new RssSourceResponse(

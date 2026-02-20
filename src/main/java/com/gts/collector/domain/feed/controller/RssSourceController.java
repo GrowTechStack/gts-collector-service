@@ -1,8 +1,8 @@
-package com.gts.collector.domain.content.controller;
+package com.gts.collector.domain.feed.controller;
 
-import com.gts.collector.domain.content.dto.RssSourceRequest;
-import com.gts.collector.domain.content.dto.RssSourceResponse;
-import com.gts.collector.domain.content.service.RssSourceService;
+import com.gts.collector.domain.feed.dto.RssSourceRequest;
+import com.gts.collector.domain.feed.dto.RssSourceResponse;
+import com.gts.collector.domain.feed.service.RssSourceService;
 import com.gts.collector.global.common.response.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,4 +1,4 @@
-package com.gts.collector.domain.content.entity;
+package com.gts.collector.domain.feed.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -38,8 +38,8 @@ public class CollectorLog {
     private LocalDateTime endTime;
 
     @Builder
-    public CollectorLog(String siteName, String rssUrl, boolean success, 
-                        int collectedCount, String errorMessage, 
+    public CollectorLog(String siteName, String rssUrl, boolean success,
+                        int collectedCount, String errorMessage,
                         LocalDateTime startTime, LocalDateTime endTime) {
         this.siteName = siteName;
         this.rssUrl = rssUrl;
