@@ -1,4 +1,4 @@
-2026-02-20 15:15:10.324440+09:00 jdbc[3]: exception
+2026-02-20 16:36:41.890282+09:00 jdbc[3]: exception
 org.h2.jdbc.JdbcSQLSyntaxErrorException: Index "IDX_CONTENTS_TYPE" already exists; SQL statement:
 CREATE INDEX idx_contents_type ON contents(type) [42111-232]
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:514)
@@ -46,7 +46,7 @@ CREATE INDEX idx_contents_type ON contents(type) [42111-232]
 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
 	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:50)
-2026-02-20 15:15:10.329440+09:00 jdbc[3]: exception
+2026-02-20 16:36:41.899282+09:00 jdbc[3]: exception
 org.h2.jdbc.JdbcSQLSyntaxErrorException: Index "IDX_CONTENTS_PUBLISHED_AT" already exists; SQL statement:
 CREATE INDEX idx_contents_published_at ON contents(published_at) [42111-232]
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:514)

@@ -17,8 +17,14 @@ public enum ErrorCode {
 
     // Content
     CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CON001", "콘텐츠를 찾을 수 없습니다."),
-    RSS_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CON002", "RSS 정보를 읽어오는 중 오류가 발생했습니다."),
-    RSS_SOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "CON003", "RSS 출처를 찾을 수 없습니다.");
+    RSS_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CON002", "RSS 피드 파싱 중 오류가 발생했습니다."),
+    RSS_SOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "CON003", "RSS 출처를 찾을 수 없습니다."),
+
+    // Collector
+    RSS_CONNECTION_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "COL001", "RSS 서버 연결 시간이 초과되었습니다."),
+    RSS_UNKNOWN_HOST(HttpStatus.BAD_GATEWAY, "COL002", "RSS 서버 주소를 찾을 수 없습니다."),
+    RSS_HTTP_ERROR(HttpStatus.BAD_GATEWAY, "COL003", "RSS 서버가 비정상 응답을 반환했습니다."),
+    RSS_INVALID_FEED(HttpStatus.UNPROCESSABLE_ENTITY, "COL004", "유효하지 않은 RSS 피드 형식입니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -10,4 +10,11 @@ public interface CollectorService {
      * @return 수집된 전체 콘텐츠 개수
      */
     int collectAll();
+
+    /**
+     * 특정 RSS 출처 하나로부터 콘텐츠를 즉시 수집합니다.
+     * @param sourceId 수집할 RSS 출처 ID
+     * @return 수집된 콘텐츠 개수
+     */
+    int collectOne(Long sourceId);
 }

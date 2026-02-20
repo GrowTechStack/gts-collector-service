@@ -5,85 +5,122 @@
     <style>
         .toast { border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15); background-color: #333; color: #fff; }
         .toast-header { background-color: transparent; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; }
-        
-        /* 로고 미리보기 크기 강제 고정 */
-        .site-logo-preview { 
-            width: 24px !important; 
-            height: 24px !important; 
-            max-width: 24px !important;
-            max-height: 24px !important;
-            border-radius: 4px; 
-            object-fit: contain; 
-            background: #f8f9fa;
-            border: 1px solid #eee;
-            display: inline-block;
+        .site-logo-preview {
+            width: 24px !important; height: 24px !important;
+            max-width: 24px !important; max-height: 24px !important;
+            border-radius: 4px; object-fit: contain;
+            background: #f8f9fa; border: 1px solid #eee; display: inline-block;
         }
+        .nav-tabs .nav-link { color: #6c757d; font-weight: 600; }
+        .nav-tabs .nav-link.active { color: #212529; }
     </style>
 </head>
 <body>
     <section>
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold">RSS 출처 관리</h2>
+            <h2 class="fw-bold">관리자</h2>
             <button class="btn btn-primary px-4 fw-bold" onclick="collectNow()">즉시 수집 실행</button>
         </div>
 
-        <div class="card shadow-sm border-0 mb-5">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4" style="width: 80px;">로고</th>
-                            <th>사이트명</th>
-                            <th>RSS URL</th>
-                            <th>상태</th>
-                            <th class="text-center">작업</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="source : ${sources}">
-                            <td class="ps-4">
-                                <!-- 클래스 적용 확인 및 인라인 스타일로 이중 고정 -->
-                                <img th:if="${source.logoUrl != null}" th:src="${source.logoUrl}" 
-                                     class="site-logo-preview" style="width:24px; height:24px;" alt="Logo">
-                                <div th:unless="${source.logoUrl != null}" class="site-logo-preview d-flex align-items-center justify-content-center small text-muted">?</div>
-                            </td>
-                            <td class="fw-bold" th:text="${source.siteName}">사이트명</td>
-                            <td th:text="${source.rssUrl}" class="small text-muted">URL</td>
-                            <td>
-                                <span class="badge rounded-pill" th:classappend="${source.active} ? 'bg-success' : 'bg-secondary'" 
-                                      th:text="${source.active ? '활성' : '비활성'}">활성</span>
-                            </td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-primary me-1" 
-                                        th:onclick="openEditModal([[${source.id}]], [[${source.siteName}]], [[${source.rssUrl}]], [[${source.logoUrl}]], [[${source.active}]])">수정</button>
-                                <button class="btn btn-sm btn-outline-danger" th:onclick="'deleteSource(' + ${source.id} + ')'">삭제</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        <!-- 탭 네비게이션 -->
+        <ul class="nav nav-tabs mb-4" id="adminTab">
+            <li class="nav-item">
+                <button class="nav-link active" onclick="switchTab('sources', this)">RSS 출처 관리</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" onclick="switchTab('logs', this)">수집 로그</button>
+            </li>
+        </ul>
+
+        <!-- 탭: RSS 출처 관리 -->
+        <div id="tab-sources">
+            <div class="card shadow-sm border-0 mb-5">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4" style="width: 80px;">로고</th>
+                                <th>사이트명</th>
+                                <th>RSS URL</th>
+                                <th>상태</th>
+                                <th class="text-center">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="source : ${sources}">
+                                <td class="ps-4">
+                                    <img th:if="${source.logoUrl != null}" th:src="${source.logoUrl}"
+                                         class="site-logo-preview" style="width:24px; height:24px;" alt="Logo">
+                                    <div th:unless="${source.logoUrl != null}" class="site-logo-preview d-flex align-items-center justify-content-center small text-muted">?</div>
+                                </td>
+                                <td class="fw-bold" th:text="${source.siteName}">사이트명</td>
+                                <td th:text="${source.rssUrl}" class="small text-muted">URL</td>
+                                <td>
+                                    <span class="badge rounded-pill" th:classappend="${source.active} ? 'bg-success' : 'bg-secondary'"
+                                          th:text="${source.active ? '활성' : '비활성'}">활성</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-primary me-1"
+                                            th:onclick="openEditModal([[${source.id}]], [[${source.siteName}]], [[${source.rssUrl}]], [[${source.logoUrl}]], [[${source.active}]])">수정</button>
+                                    <button class="btn btn-sm btn-outline-danger" th:onclick="'deleteSource(' + ${source.id} + ')'">삭제</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h5 class="fw-bold mb-3">새 출처 등록</h5>
+                <div class="card p-4 shadow-sm border-0 bg-white">
+                    <form id="addSourceForm" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">사이트 이름</label>
+                            <input type="text" class="form-control" id="siteName" placeholder="예: 토스 테크" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">RSS URL</label>
+                            <input type="url" class="form-control" id="rssUrl" placeholder="https://..." required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">로고 아이콘 URL</label>
+                            <input type="url" class="form-control" id="logoUrl" placeholder="https://.../favicon.ico">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-dark w-100 fw-bold">등록하기</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <div class="mt-5">
-            <h4 class="fw-bold mb-3">새 출처 등록</h4>
-            <div class="card p-4 shadow-sm border-0 bg-white">
-                <form id="addSourceForm" class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold">사이트 이름</label>
-                        <input type="text" class="form-control" id="siteName" placeholder="예: 토스 테크" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold">RSS URL</label>
-                        <input type="url" class="form-control" id="rssUrl" placeholder="https://..." required>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold">로고 아이콘 URL</label>
-                        <input type="url" class="form-control" id="logoUrl" placeholder="https://.../favicon.ico">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-dark w-100 fw-bold">등록하기</button>
-                    </div>
-                </form>
+        <!-- 탭: 수집 로그 -->
+        <div id="tab-logs" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted small">최대 50건 표시</span>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary me-2" id="btnAll" onclick="loadLogs('all')">전체</button>
+                    <button class="btn btn-sm btn-outline-danger" id="btnFail" onclick="loadLogs('failures')">실패만 보기</button>
+                </div>
+            </div>
+            <div class="card shadow-sm border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">사이트명</th>
+                                <th class="text-center">결과</th>
+                                <th class="text-center">수집 수</th>
+                                <th>시작 시간</th>
+                                <th>소요 시간</th>
+                                <th>오류 메시지</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTableBody">
+                            <tr><td colspan="6" class="text-center text-muted py-4">로그를 불러오는 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -140,10 +177,16 @@
 
             document.addEventListener('DOMContentLoaded', () => {
                 const modalEl = document.getElementById('editModal');
-                if (modalEl) {
-                    editModal = new bootstrap.Modal(modalEl);
-                }
+                if (modalEl) editModal = new bootstrap.Modal(modalEl);
             });
+
+            function switchTab(tab, el) {
+                document.getElementById('tab-sources').style.display = tab === 'sources' ? '' : 'none';
+                document.getElementById('tab-logs').style.display = tab === 'logs' ? '' : 'none';
+                document.querySelectorAll('#adminTab .nav-link').forEach(btn => btn.classList.remove('active'));
+                el.classList.add('active');
+                if (tab === 'logs') loadLogs('all');
+            }
 
             function openEditModal(id, siteName, rssUrl, logoUrl, active) {
                 document.getElementById('editId').value = id;
@@ -162,7 +205,6 @@
                     logoUrl: document.getElementById('editLogoUrl').value,
                     active: document.getElementById('editActive').checked
                 };
-
                 const response = await fetch(`/api/v1/rss-sources/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -173,20 +215,60 @@
             }
 
             async function collectNow() {
-                if(!confirm('즉시 수집을 실행하시겠습니까?')) return;
+                if (!confirm('즉시 수집을 실행하시겠습니까?')) return;
                 const toast = new bootstrap.Toast(document.getElementById('liveToast'));
                 const response = await fetch('/api/v1/collector/collect', { method: 'POST' });
                 const result = await response.json();
-                document.getElementById('toastMessage').innerText = result.success ? 
+                document.getElementById('toastMessage').innerText = result.success ?
                     `${result.data}개의 콘텐츠를 수집했습니다!` : '오류';
                 toast.show();
-                if(result.success) setTimeout(() => location.reload(), 2000);
+                if (result.success) setTimeout(() => location.reload(), 2000);
             }
 
             async function deleteSource(id) {
-                if(!confirm('삭제하시겠습니까?')) return;
+                if (!confirm('삭제하시겠습니까?')) return;
                 await fetch(`/api/v1/rss-sources/${id}`, { method: 'DELETE' });
                 location.reload();
+            }
+
+            async function loadLogs(type = 'all') {
+                const url = type === 'failures'
+                    ? '/api/v1/collector/logs/failures'
+                    : '/api/v1/collector/logs';
+
+                document.getElementById('btnAll').className = 'btn btn-sm ' + (type === 'all' ? 'btn-secondary' : 'btn-outline-secondary') + ' me-2';
+                document.getElementById('btnFail').className = 'btn btn-sm ' + (type === 'failures' ? 'btn-danger' : 'btn-outline-danger');
+
+                const res = await fetch(url);
+                const result = await res.json();
+                const logs = result.data || [];
+                const tbody = document.getElementById('logTableBody');
+
+                if (logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">로그가 없습니다.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = logs.map(log => {
+                    const start = log.startTime ? new Date(log.startTime) : null;
+                    const end = log.endTime ? new Date(log.endTime) : null;
+                    const duration = start && end ? ((end - start) / 1000).toFixed(1) + 's' : '-';
+                    const startStr = start ? start.toLocaleString('ko-KR') : '-';
+                    const badge = log.success
+                        ? '<span class="badge bg-success rounded-pill">성공</span>'
+                        : '<span class="badge bg-danger rounded-pill">실패</span>';
+                    const error = log.errorMessage
+                        ? `<span class="text-danger" title="${log.errorMessage}">${log.errorMessage.substring(0, 50)}${log.errorMessage.length > 50 ? '...' : ''}</span>`
+                        : '<span class="text-muted">-</span>';
+                    return `<tr>
+                        <td class="ps-4 fw-bold">${log.siteName}</td>
+                        <td class="text-center">${badge}</td>
+                        <td class="text-center">${log.collectedCount}</td>
+                        <td>${startStr}</td>
+                        <td class="text-muted">${duration}</td>
+                        <td>${error}</td>
+                    </tr>`;
+                }).join('');
             }
 
             document.getElementById('addSourceForm').onsubmit = async (e) => {
@@ -194,11 +276,11 @@
                 await fetch('/api/v1/rss-sources', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        siteName: document.getElementById('siteName').value, 
-                        rssUrl: document.getElementById('rssUrl').value, 
+                    body: JSON.stringify({
+                        siteName: document.getElementById('siteName').value,
+                        rssUrl: document.getElementById('rssUrl').value,
                         logoUrl: document.getElementById('logoUrl').value,
-                        active: true 
+                        active: true
                     })
                 });
                 location.reload();

@@ -6,6 +6,8 @@ import com.gts.collector.domain.feed.repository.CollectorLogRepository;
 import com.gts.collector.domain.feed.repository.RssSourceRepository;
 import com.gts.collector.domain.feed.service.CollectorService;
 import com.gts.collector.domain.feed.service.RssCollectorService;
+import com.gts.collector.global.error.ErrorCode;
+import com.gts.collector.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,12 +37,14 @@ public class CollectorServiceImpl implements CollectorService {
     @Override
     @Transactional
     public int collectAll() {
-        log.info("Starting manual/scheduled RSS collection...");
+        log.info("===== RSS 수집 시작 =====");
 
         List<RssSource> activeSources = rssSourceRepository.findAllByActiveTrue();
-        log.info("Found {} active RSS sources to process.", activeSources.size());
+        log.info("활성 RSS 출처 {}개 처리 예정", activeSources.size());
 
         int totalCollectedCount = 0;
+        int successCount = 0;
+        int failCount = 0;
 
         for (RssSource source : activeSources) {
             LocalDateTime startTime = LocalDateTime.now();
@@ -49,20 +53,64 @@ public class CollectorServiceImpl implements CollectorService {
             String errorMessage = null;
 
             try {
-                log.info("Collecting from site: {} ({})", source.getSiteName(), source.getRssUrl());
+                log.info("[수집 시작] 사이트={}, URL={}", source.getSiteName(), source.getRssUrl());
                 collectedCount = rssCollectorService.collect(source.getRssUrl(), source.getSiteName());
                 success = true;
+                successCount++;
                 totalCollectedCount += collectedCount;
+                log.info("[수집 성공] 사이트={}, 수집건수={}", source.getSiteName(), collectedCount);
+            } catch (BusinessException e) {
+                failCount++;
+                errorMessage = "[" + e.getErrorCode().getCode() + "] " + e.getErrorCode().getMessage();
+                log.error("[수집 실패] 사이트={}, URL={}, 오류코드={}, 원인={}",
+                        source.getSiteName(), source.getRssUrl(), e.getErrorCode().getCode(), e.getErrorCode().getMessage());
             } catch (Exception e) {
-                log.error("Failed to collect from site: {}", source.getSiteName(), e);
+                failCount++;
                 errorMessage = e.getMessage();
+                log.error("[수집 실패] 사이트={}, URL={}, 원인={}", source.getSiteName(), source.getRssUrl(), errorMessage, e);
             } finally {
                 saveLog(source, success, collectedCount, errorMessage, startTime, LocalDateTime.now());
             }
         }
 
-        log.info("RSS collection completed. Total collected: {}", totalCollectedCount);
+        log.info("===== RSS 수집 완료 | 전체={}, 성공={}, 실패={}, 총 수집건수={} =====",
+                activeSources.size(), successCount, failCount, totalCollectedCount);
         return totalCollectedCount;
+    }
+
+    /**
+     * 특정 RSS 출처 하나에서 콘텐츠를 수집합니다.
+     */
+    @Override
+    @Transactional
+    public int collectOne(Long sourceId) {
+        RssSource source = rssSourceRepository.findById(sourceId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RSS_SOURCE_NOT_FOUND));
+
+        log.info("===== 단건 RSS 수집 시작 | 사이트={} =====", source.getSiteName());
+
+        LocalDateTime startTime = LocalDateTime.now();
+        int collectedCount = 0;
+        boolean success = false;
+        String errorMessage = null;
+
+        try {
+            log.info("[수집 시작] 사이트={}, URL={}", source.getSiteName(), source.getRssUrl());
+            collectedCount = rssCollectorService.collect(source.getRssUrl(), source.getSiteName());
+            success = true;
+            log.info("[수집 성공] 사이트={}, 수집건수={}", source.getSiteName(), collectedCount);
+        } catch (BusinessException e) {
+            errorMessage = "[" + e.getErrorCode().getCode() + "] " + e.getErrorCode().getMessage();
+            log.error("[수집 실패] 사이트={}, 오류코드={}, 원인={}",
+                    source.getSiteName(), e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+        } catch (Exception e) {
+            errorMessage = e.getMessage();
+            log.error("[수집 실패] 사이트={}, 원인={}", source.getSiteName(), errorMessage, e);
+        } finally {
+            saveLog(source, success, collectedCount, errorMessage, startTime, LocalDateTime.now());
+        }
+
+        return collectedCount;
     }
 
     /**

@@ -27,6 +27,10 @@ spring:
     show-sql: false
     open-in-view: false
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
 springdoc:
   swagger-ui:
     try-it-out-enabled: true

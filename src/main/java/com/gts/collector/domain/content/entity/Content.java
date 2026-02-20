@@ -30,6 +30,7 @@ public class Content {
     @Column(columnDefinition = "TEXT")
     private String body; // USER 타입일 경우 사용
 
+    @Column(length = 500)
     private String originalUrl; // EXTERNAL 타입일 경우 원문 링크
 
     private String siteName; // 출처 사이트명 (예: 토스 테크)

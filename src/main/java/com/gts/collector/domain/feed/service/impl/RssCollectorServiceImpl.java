@@ -9,16 +9,20 @@ import com.gts.collector.global.error.exception.BusinessException;
 import com.rometools.rome.feed.synd.SyndEnclosure;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
+import com.rometools.rome.io.ParsingFeedException;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jdom2.Element;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -46,16 +50,17 @@ public class RssCollectorServiceImpl implements RssCollectorService {
      * 기존에 저장된 URL은 중복 저장되지 않으며, 썸네일이 없는 경우에만 업데이트합니다.
      */
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public int collect(String rssUrl, String siteName) {
         log.info("Starting RSS collection from: {} ({})", siteName, rssUrl);
         int savedCount = 0;
 
+        HttpURLConnection connection = null;
         try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(rssUrl).openConnection();
+            connection = (HttpURLConnection) new URL(rssUrl).openConnection();
             connection.setRequestProperty("User-Agent", USER_AGENT);
             connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
+            connection.setReadTimeout(15000);
 
             SyndFeed feed = new SyndFeedInput().build(new XmlReader(connection));
             List<SyndEntry> entries = feed.getEntries();
@@ -68,9 +73,23 @@ public class RssCollectorServiceImpl implements RssCollectorService {
 
             log.info("Finished RSS collection for {}. Processed {} entries.", siteName, savedCount);
             return savedCount;
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (UnknownHostException e) {
+            log.error("DNS 조회 실패 - 도메인을 찾을 수 없습니다: site={}, url={}", siteName, rssUrl);
+            throw new BusinessException(ErrorCode.RSS_UNKNOWN_HOST);
+        } catch (SocketTimeoutException e) {
+            log.error("연결 시간 초과: site={}, url={}, 원인={}", siteName, rssUrl, e.getMessage());
+            throw new BusinessException(ErrorCode.RSS_CONNECTION_TIMEOUT);
+        } catch (ParsingFeedException e) {
+            log.error("RSS 피드 파싱 실패 (유효하지 않은 XML 형식): site={}, url={}, 원인={}", siteName, rssUrl, e.getMessage());
+            throw new BusinessException(ErrorCode.RSS_INVALID_FEED);
         } catch (Exception e) {
-            log.error("Failed to collect RSS from: {}", rssUrl, e);
+            log.error("RSS 수집 중 알 수 없는 오류: site={}, url={}, 원인={}", siteName, rssUrl, e.getMessage(), e);
             throw new BusinessException(ErrorCode.RSS_PARSE_ERROR);
+        } finally {
+            if (connection != null) connection.disconnect();
         }
     }
 
