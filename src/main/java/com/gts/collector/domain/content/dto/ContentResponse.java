@@ -14,6 +14,7 @@ public record ContentResponse(
     String body,
     String originalUrl,
     String siteName,
+    String thumbnailUrl,
     String tags,
     int viewCount,
     LocalDateTime publishedAt
@@ -27,6 +28,7 @@ public record ContentResponse(
             content.getBody(),
             content.getOriginalUrl(),
             content.getSiteName(),
+            content.getThumbnailUrl(),
             content.getTags(),
             content.getViewCount(),
             content.getPublishedAt()

@@ -2,70 +2,141 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::section})}">
 <head>
     <title>최신 피드 - GrowTechStack</title>
-    <style>
-        /* 기본 카드 디자인 */
-        .content-card { 
-            position: relative;
-            z-index: 1;
-            border-radius: 12px; 
-            border: 1px solid #eee; 
-            transition: all 0.2s; 
-            background-color: #ffffff; 
-        }
-        .content-card:hover { 
-            border-color: #0d6efd; 
-            background-color: #fcfdff; 
-        }
-
-        /* 읽은 게시글 */
-        .content-item.is-read .stretched-link::after {
-            background-color: #efefef !important;
-            z-index: -1;
-            border-radius: 12px;
-        }
-        .content-item.is-read .content-card {
-            background-color: transparent !important;
-            border-color: #ddd !important;
-        }
-        .content-item.is-read .card-title { color: #999 !important; }
-        .content-item.is-read .card-text { color: #bbb !important; }
-
-        /* 태그 칩 스타일 (fragments/components.html 에서 가져옴) */
-    </style>
 </head>
 <body>
     <section>
+        <style>
+        .content-card {
+            position: relative;
+            z-index: 1;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+            background-color: #ffffff;
+            margin-bottom: 20px;
+        }
+        .content-card:hover {
+            border-color: #0d6efd;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
+
+        /* 제목 스타일 */
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #111111;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            letter-spacing: -0.02em;
+        }
+
+        /* 요약 텍스트 */
+        .card-text {
+            color: #555555;
+            font-size: 0.875rem;
+            font-weight: 400;
+            line-height: 1.55;
+            margin-bottom: 14px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 태그 칩 */
+        .tag-badge {
+            font-size: 0.85rem;
+            padding: 4px 12px;
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-right: 8px;
+            font-weight: 500;
+        }
+
+        /* 하단 메타바: 로고 최소화 및 동그랗게 */
+        .meta-bar {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 20px;
+        }
+        .site-logo-mini {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 6px;
+            object-fit: cover;
+            border: 1px solid #f1f3f5;
+            vertical-align: middle;
+        }
+
+        /* 우측 썸네일 */
+        .thumbnail-box {
+            width: 140px;
+            height: 95px;
+            margin-left: 20px;
+            flex-shrink: 0;
+        }
+        .thumbnail-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            background-color: #f1f3f5;
+        }
+
+        /* 읽음 상태: 더 세련되게 */
+        .is-read-text { color: #adb5bd !important; font-weight: 500 !important; }
+        </style>
         <div class="row">
-            <div class="col-12 mx-auto" style="max-width: 900px;">
+            <div class="col-12 mx-auto" style="max-width: 850px;">
                 
-                <!-- 분리된 컴포넌트 사용 (태그 필터) -->
+                <!-- 태그 필터 컴포넌트 -->
                 <div th:replace="~{fragments/components :: tagNav(${currentTag})}"></div>
 
                 <!-- 콘텐츠 리스트 -->
-                <div th:each="content : ${contents.content}" class="content-item mb-3" th:data-id="${content.id}">
-                    <div class="card content-card shadow-sm p-2">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge bg-primary bg-opacity-10 text-primary" th:text="${content.siteName}">출처</span>
-                                <small class="text-muted" th:text="${#temporals.format(content.publishedAt, 'yyyy.MM.dd')}">2024.02.19</small>
-                            </div>
+                <div th:each="content : ${contents.content}" class="content-item" th:data-id="${content.id}">
+                    <div class="card content-card border-0 shadow-sm">
+                        <div class="card-body p-4 d-flex align-items-center">
                             
-                            <h5 class="card-title fw-bold mb-2">
-                                <a th:href="@{/contents/{id}(id=${content.id})}" 
-                                   class="text-decoration-none text-dark stretched-link" 
-                                   th:text="${content.title}"
-                                   th:onclick="'markAsRead(' + ${content.id} + ')'">제목</a>
-                            </h5>
-                            
-                            <p class="card-text text-muted small mb-3 text-truncate-2" th:text="${content.summary}">내용 요약...</p>
-                            
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
+                            <div class="flex-grow-1">
+                                <!-- 1. 제목 -->
+                                <h5 class="card-title">
+                                    <a th:href="@{/contents/{id}(id=${content.id})}" 
+                                       class="text-decoration-none text-dark stretched-link" 
+                                       th:text="${content.title}"
+                                       th:onclick="'markAsRead(' + ${content.id} + ')'">제목</a>
+                                </h5>
+                                
+                                <!-- 2. 요약 -->
+                                <p class="card-text" th:text="${content.summary}">내용 요약...</p>
+                                
+                                <!-- 3. 태그 리스트 -->
+                                <div class="d-flex flex-wrap" style="position: relative; z-index: 2;">
                                     <span th:each="tag : ${#strings.arraySplit(content.tags, ',')}" 
-                                          class="badge rounded-pill bg-light text-secondary me-1" 
-                                          th:text="${tag}">태그</span>
+                                          class="tag-badge" th:text="${tag}">태그</span>
                                 </div>
-                                <small class="text-muted">조회 [[${content.viewCount}]]</small>
+                                
+                                <!-- 4. 하단 메타바 -->
+                                <div class="meta-bar">
+                                    <img th:src="${siteLogos[content.siteName] != null ? siteLogos[content.siteName] : '/img/default-logo.svg'}"
+                                         class="site-logo-mini" alt="icon">
+                                    <span class="fw-bold text-dark me-2" th:text="${content.siteName}">사이트명</span>
+                                    <span class="me-2 text-muted">·</span>
+                                    <span th:text="${#temporals.format(content.publishedAt, 'yyyy년 MM월 dd일')}">날짜</span>
+                                    <span class="mx-2">·</span>
+                                    <span>조회 [[${content.viewCount}]]</span>
+                                </div>
+                            </div>
+
+                            <!-- 5. 썸네일 (항상 표시, 없으면 기본 이미지) -->
+                            <div class="thumbnail-box d-none d-md-block">
+                                <img th:src="${content.thumbnailUrl != null ? content.thumbnailUrl : '/img/default-thumbnail.svg'}"
+                                     class="thumbnail-img" alt="Thumbnail">
                             </div>
                         </div>
                     </div>
@@ -75,14 +146,14 @@
                 <nav th:if="${contents.totalPages > 1}" class="mt-5 mb-5">
                     <ul class="pagination justify-content-center">
                         <li class="page-item" th:classappend="${contents.first} ? 'disabled'">
-                            <a class="page-link" th:href="@{/(page=${contents.number - 1}, tag=${currentTag})}">이전</a>
+                            <a class="page-link border-0 bg-transparent text-muted px-3" th:href="@{/(page=${contents.number - 1}, tag=${currentTag})}">이전</a>
                         </li>
                         <li th:each="i : ${#numbers.sequence(0, contents.totalPages - 1)}" 
                             class="page-item" th:classappend="${i == contents.number} ? 'active'">
-                            <a class="page-link" th:href="@{/(page=${i}, tag=${currentTag})}" th:text="${i + 1}">1</a>
+                            <a class="page-link border-0 rounded-circle mx-1" th:href="@{/(page=${i}, tag=${currentTag})}" th:text="${i + 1}">1</a>
                         </li>
                         <li class="page-item" th:classappend="${contents.last} ? 'disabled'">
-                            <a class="page-link" th:href="@{/(page=${contents.number + 1}, tag=${currentTag})}">다음</a>
+                            <a class="page-link border-0 bg-transparent text-muted px-3" th:href="@{/(page=${contents.number + 1}, tag=${currentTag})}">다음</a>
                         </li>
                     </ul>
                 </nav>
@@ -108,9 +179,9 @@
                     const card = item.querySelector('.content-card');
                     const title = item.querySelector('.card-title');
                     if (readIds.includes(id)) {
-                        card.style.setProperty('background-color', '#f2f2f2', 'important');
+                        card.style.setProperty('background-color', '#fcfcfc', 'important');
                         card.style.setProperty('opacity', '0.8', 'important');
-                        if (title) title.style.setProperty('color', '#888', 'important');
+                        if (title) title.classList.add('is-read-text');
                     }
                 });
             }

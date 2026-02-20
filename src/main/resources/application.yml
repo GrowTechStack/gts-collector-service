@@ -24,12 +24,15 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+    show-sql: false
     open-in-view: false
+
+springdoc:
+  swagger-ui:
+    try-it-out-enabled: true
+    operations-sorter: alpha
 
 logging:
   level:
     org.hibernate.orm.queries: info
+    com.gts.collector: debug

@@ -34,6 +34,8 @@ public class Content {
 
     private String siteName; // 출처 사이트명 (예: 토스 테크)
 
+    private String thumbnailUrl; // 썸네일 이미지 URL
+
     private String tags; // 쉼표로 구분된 태그 목록
 
     private int viewCount;
@@ -46,7 +48,7 @@ public class Content {
 
     @Builder
     public Content(ContentType type, String title, String summary, String body, 
-                   String originalUrl, String siteName, String tags, 
+                   String originalUrl, String siteName, String thumbnailUrl, String tags, 
                    LocalDateTime publishedAt, boolean commentEnabled) {
         this.type = type;
         this.title = title;
@@ -54,6 +56,7 @@ public class Content {
         this.body = body;
         this.originalUrl = originalUrl;
         this.siteName = siteName;
+        this.thumbnailUrl = thumbnailUrl;
         this.tags = tags;
         this.publishedAt = publishedAt;
         this.commentEnabled = commentEnabled;
@@ -69,10 +72,11 @@ public class Content {
     }
 
     /**
-     * 메타데이터(사이트명, 태그)를 업데이트합니다.
+     * 메타데이터(사이트명, 태그, 썸네일)를 업데이트합니다.
      */
-    public void updateMetadata(String siteName, String tags) {
+    public void updateMetadata(String siteName, String tags, String thumbnailUrl) {
         this.siteName = siteName;
         this.tags = tags;
+        if (thumbnailUrl != null) this.thumbnailUrl = thumbnailUrl;
     }
 }

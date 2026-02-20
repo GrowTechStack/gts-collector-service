@@ -11,6 +11,7 @@ public record ContentSummaryResponse(
     String title,
     String summary,
     String siteName,
+    String thumbnailUrl,
     String tags,
     int viewCount,
     LocalDateTime publishedAt
@@ -21,6 +22,7 @@ public record ContentSummaryResponse(
             content.getTitle(),
             content.getSummary(),
             content.getSiteName(),
+            content.getThumbnailUrl(),
             content.getTags(),
             content.getViewCount(),
             content.getPublishedAt()

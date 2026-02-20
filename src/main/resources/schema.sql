@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS contents (
     summary CLOB,                       -- 외부 글 요약
     original_url VARCHAR(500) UNIQUE,   -- 외부 글 링크 (중복 수집 방지)
     site_name VARCHAR(100),             -- 출처 사이트명
+    thumbnail_url VARCHAR(500),         -- 썸네일 이미지 URL
     tags VARCHAR(255),                  -- 태그 (쉼표 구분)
     author_id BIGINT,                   -- 작성자 ID (USER 타입일 경우)
     view_count BIGINT DEFAULT 0,
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS rss_sources (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     site_name VARCHAR(100) NOT NULL,
     rss_url VARCHAR(500) NOT NULL UNIQUE,
+    logo_url VARCHAR(500),              -- 사이트 로고 아이콘 URL
     active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

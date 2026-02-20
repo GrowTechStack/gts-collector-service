@@ -3,26 +3,20 @@
 <head>
     <title>관리자 - GrowTechStack</title>
     <style>
-        /* 토스트 팝업 커스텀 디자인 */
-        .toast {
-            border-radius: 12px;
-            border: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            background-color: #333;
-            color: #fff;
-        }
-        .toast-header {
-            background-color: transparent;
-            color: #fff;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            font-weight: bold;
-        }
-        .toast-body {
-            padding: 15px;
-            font-size: 0.95rem;
-        }
-        .btn-close-white {
-            filter: invert(1) grayscale(100%) brightness(200%);
+        .toast { border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15); background-color: #333; color: #fff; }
+        .toast-header { background-color: transparent; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold; }
+        
+        /* 로고 미리보기 크기 강제 고정 */
+        .site-logo-preview { 
+            width: 24px !important; 
+            height: 24px !important; 
+            max-width: 24px !important;
+            max-height: 24px !important;
+            border-radius: 4px; 
+            object-fit: contain; 
+            background: #f8f9fa;
+            border: 1px solid #eee;
+            display: inline-block;
         }
     </style>
 </head>
@@ -33,12 +27,13 @@
             <button class="btn btn-primary px-4 fw-bold" onclick="collectNow()">즉시 수집 실행</button>
         </div>
 
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 mb-5">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-4">사이트명</th>
+                            <th class="ps-4" style="width: 80px;">로고</th>
+                            <th>사이트명</th>
                             <th>RSS URL</th>
                             <th>상태</th>
                             <th class="text-center">작업</th>
@@ -46,14 +41,22 @@
                     </thead>
                     <tbody>
                         <tr th:each="source : ${sources}">
-                            <td class="fw-bold ps-4" th:text="${source.siteName}">토스 테크</td>
-                            <td th:text="${source.rssUrl}">https://...</td>
+                            <td class="ps-4">
+                                <!-- 클래스 적용 확인 및 인라인 스타일로 이중 고정 -->
+                                <img th:if="${source.logoUrl != null}" th:src="${source.logoUrl}" 
+                                     class="site-logo-preview" style="width:24px; height:24px;" alt="Logo">
+                                <div th:unless="${source.logoUrl != null}" class="site-logo-preview d-flex align-items-center justify-content-center small text-muted">?</div>
+                            </td>
+                            <td class="fw-bold" th:text="${source.siteName}">사이트명</td>
+                            <td th:text="${source.rssUrl}" class="small text-muted">URL</td>
                             <td>
                                 <span class="badge rounded-pill" th:classappend="${source.active} ? 'bg-success' : 'bg-secondary'" 
                                       th:text="${source.active ? '활성' : '비활성'}">활성</span>
                             </td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-danger px-3" th:onclick="'deleteSource(' + ${source.id} + ')'">삭제</button>
+                                <button class="btn btn-sm btn-outline-primary me-1" 
+                                        th:onclick="openEditModal([[${source.id}]], [[${source.siteName}]], [[${source.rssUrl}]], [[${source.logoUrl}]], [[${source.active}]])">수정</button>
+                                <button class="btn btn-sm btn-outline-danger" th:onclick="'deleteSource(' + ${source.id} + ')'">삭제</button>
                             </td>
                         </tr>
                     </tbody>
@@ -65,13 +68,17 @@
             <h4 class="fw-bold mb-3">새 출처 등록</h4>
             <div class="card p-4 shadow-sm border-0 bg-white">
                 <form id="addSourceForm" class="row g-3">
-                    <div class="col-md-5">
+                    <div class="col-md-3">
                         <label class="form-label small fw-bold">사이트 이름</label>
                         <input type="text" class="form-control" id="siteName" placeholder="예: 토스 테크" required>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label class="form-label small fw-bold">RSS URL</label>
                         <input type="url" class="form-control" id="rssUrl" placeholder="https://..." required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">로고 아이콘 URL</label>
+                        <input type="url" class="form-control" id="logoUrl" placeholder="https://.../favicon.ico">
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
                         <button type="submit" class="btn btn-dark w-100 fw-bold">등록하기</button>
@@ -80,7 +87,44 @@
             </div>
         </div>
 
-        <!-- 알림 토스트 (개선된 디자인) -->
+        <!-- 수정 모달 -->
+        <div class="modal fade" id="editModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">출처 정보 수정</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editSourceForm">
+                            <input type="hidden" id="editId">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">사이트 이름</label>
+                                <input type="text" class="form-control" id="editSiteName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">RSS URL</label>
+                                <input type="url" class="form-control" id="editRssUrl" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">로고 아이콘 URL</label>
+                                <input type="url" class="form-control" id="editLogoUrl">
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="editActive">
+                                <label class="form-check-label small fw-bold" for="editActive">활성화 여부</label>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                        <button type="button" class="btn btn-primary fw-bold" onclick="updateSource()">수정 완료</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 알림 토스트 -->
         <div class="toast-container position-fixed bottom-0 end-0 p-3">
             <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="toast-header d-flex justify-content-between align-items-center">
@@ -92,34 +136,68 @@
         </div>
 
         <script>
+            let editModal;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const modalEl = document.getElementById('editModal');
+                if (modalEl) {
+                    editModal = new bootstrap.Modal(modalEl);
+                }
+            });
+
+            function openEditModal(id, siteName, rssUrl, logoUrl, active) {
+                document.getElementById('editId').value = id;
+                document.getElementById('editSiteName').value = siteName;
+                document.getElementById('editRssUrl').value = rssUrl;
+                document.getElementById('editLogoUrl').value = logoUrl || '';
+                document.getElementById('editActive').checked = active;
+                if (editModal) editModal.show();
+            }
+
+            async function updateSource() {
+                const id = document.getElementById('editId').value;
+                const body = {
+                    siteName: document.getElementById('editSiteName').value,
+                    rssUrl: document.getElementById('editRssUrl').value,
+                    logoUrl: document.getElementById('editLogoUrl').value,
+                    active: document.getElementById('editActive').checked
+                };
+
+                const response = await fetch(`/api/v1/rss-sources/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (response.ok) location.reload();
+                else alert('수정 오류');
+            }
+
             async function collectNow() {
                 if(!confirm('즉시 수집을 실행하시겠습니까?')) return;
-                const toastEl = document.getElementById('liveToast');
-                const toast = new bootstrap.Toast(toastEl);
-                try {
-                    const response = await fetch('/api/v1/collector/collect', { method: 'POST' });
-                    const result = await response.json();
-                    document.getElementById('toastMessage').innerText = result.success ? 
-                        `${result.data}개의 콘텐츠를 성공적으로 수집했습니다!` : '오류: ' + result.error.message;
-                    toast.show();
-                    if(result.success) setTimeout(() => location.reload(), 2000);
-                } catch (e) { alert('통신 오류가 발생했습니다.'); }
+                const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+                const response = await fetch('/api/v1/collector/collect', { method: 'POST' });
+                const result = await response.json();
+                document.getElementById('toastMessage').innerText = result.success ? 
+                    `${result.data}개의 콘텐츠를 수집했습니다!` : '오류';
+                toast.show();
+                if(result.success) setTimeout(() => location.reload(), 2000);
             }
 
             async function deleteSource(id) {
-                if(!confirm('정말 삭제하시겠습니까?')) return;
+                if(!confirm('삭제하시겠습니까?')) return;
                 await fetch(`/api/v1/rss-sources/${id}`, { method: 'DELETE' });
                 location.reload();
             }
 
             document.getElementById('addSourceForm').onsubmit = async (e) => {
                 e.preventDefault();
-                const response = await fetch('/api/v1/rss-sources', {
+                await fetch('/api/v1/rss-sources', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         siteName: document.getElementById('siteName').value, 
                         rssUrl: document.getElementById('rssUrl').value, 
+                        logoUrl: document.getElementById('logoUrl').value,
                         active: true 
                     })
                 });

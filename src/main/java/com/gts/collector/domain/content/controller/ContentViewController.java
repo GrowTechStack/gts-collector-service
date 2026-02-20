@@ -36,6 +36,17 @@ public class ContentViewController {
                         @PageableDefault(size = 12, sort = "publishedAt", direction = Sort.Direction.DESC) Pageable pageable) {
         model.addAttribute("contents", contentService.getContents(tag, pageable));
         model.addAttribute("currentTag", tag);
+        
+        // 사이트별 로고 URL 맵 추가
+        java.util.Map<String, String> siteLogos = rssSourceService.getAllSources().stream()
+                .filter(s -> s.logoUrl() != null)
+                .collect(java.util.stream.Collectors.toMap(
+                        com.gts.collector.domain.content.dto.RssSourceResponse::siteName,
+                        com.gts.collector.domain.content.dto.RssSourceResponse::logoUrl,
+                        (existing, replacement) -> existing
+                ));
+        model.addAttribute("siteLogos", siteLogos);
+        
         return "index";
     }
 

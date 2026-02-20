@@ -27,7 +27,7 @@ public class SecurityConfig {
                 // 요청 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/admin", "/contents/**", "/error").permitAll() // UI 및 에러 페이지 허용
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico", "/favicon.svg").permitAll() // 정적 리소스 허용
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/img/**", "/favicon.ico", "/favicon.svg").permitAll() // 정적 리소스 허용
                         .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/**").permitAll() // MVP 단계에서는 API 전체 허용
                         .anyRequest().authenticated()

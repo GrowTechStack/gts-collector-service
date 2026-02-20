@@ -25,18 +25,22 @@ public class RssSource {
     @Column(nullable = false, unique = true)
     private String rssUrl;   // RSS 피드 URL
 
+    private String logoUrl;  // 사이트 로고 아이콘 URL
+
     private boolean active;  // 활성화 여부
 
     @Builder
-    public RssSource(String siteName, String rssUrl, boolean active) {
+    public RssSource(String siteName, String rssUrl, String logoUrl, boolean active) {
         this.siteName = siteName;
         this.rssUrl = rssUrl;
+        this.logoUrl = logoUrl;
         this.active = active;
     }
 
-    public void update(String siteName, String rssUrl, boolean active) {
+    public void update(String siteName, String rssUrl, String logoUrl, boolean active) {
         this.siteName = siteName;
         this.rssUrl = rssUrl;
+        this.logoUrl = logoUrl;
         this.active = active;
     }
 }
