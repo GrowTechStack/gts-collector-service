@@ -91,166 +91,6 @@
 
         /* 읽음 상태: 더 세련되게 */
         .is-read-text { color: #adb5bd !important; font-weight: 500 !important; }
-
-        /* 사이드바 */
-        .source-sidebar {
-            position: sticky;
-            top: 80px;
-            width: 220px;
-            flex-shrink: 0;
-        }
-        .source-sidebar .sidebar-card {
-            background: #fff;
-            border: 1px solid #e9ecef;
-            border-radius: 12px;
-            padding: 16px;
-        }
-        .source-sidebar .sidebar-title {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #888;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-        }
-        .source-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #f1f3f5;
-            font-size: 0.85rem;
-            color: #333;
-        }
-        .source-item:last-child { border-bottom: none; }
-        .source-item img {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 8px;
-            border: 1px solid #e9ecef;
-            flex-shrink: 0;
-        }
-        .source-item .active-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #28a745;
-            margin-left: auto;
-            flex-shrink: 0;
-        }
-        .btn-view-all {
-            width: 100%;
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: #666;
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 6px;
-            cursor: pointer;
-        }
-        .btn-view-all:hover { background: #e9ecef; }
-
-        /* 전체보기 팝업 */
-        .source-modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-        .source-modal-overlay.show { display: flex; }
-        .source-modal {
-            background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            width: 360px;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        }
-        .source-modal .modal-header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-        .source-modal .modal-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #111;
-        }
-        .source-modal .btn-close-modal {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            color: #888;
-            cursor: pointer;
-            padding: 0;
-            line-height: 1;
-        }
-
-        /* 호버 카드 */
-        #hover-card {
-            display: none;
-            position: fixed;
-            width: 220px;
-            background: #fff;
-            border: 1px solid #e9ecef;
-            border-radius: 12px;
-            padding: 14px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-            z-index: 9998;
-        }
-        #hover-card .hc-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        #hover-card .hc-header img {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 8px;
-            border: 1px solid #e9ecef;
-            flex-shrink: 0;
-        }
-        #hover-card .hc-name {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #111;
-        }
-        #hover-card .hc-stat {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: #444;
-            margin-bottom: 4px;
-        }
-        #hover-card .hc-stat span.label { color: #aaa; }
-        #hover-card .hc-divider {
-            border: none;
-            border-top: 1px solid #f1f3f5;
-            margin: 8px 0;
-        }
-        #hover-card .hc-visit {
-            display: block;
-            margin-top: 10px;
-            text-align: center;
-            font-size: 0.8rem;
-            color: #0d6efd;
-            background: #f0f4ff;
-            border-radius: 8px;
-            padding: 6px;
-            text-decoration: none;
-            pointer-events: auto;
-        }
-        #hover-card .hc-visit:hover { background: #dce8ff; }
-        #hover-card .hc-visit { pointer-events: auto; }
         </style>
         <div class="d-flex justify-content-center gap-4" style="align-items: flex-start;">
             <!-- 메인 콘텐츠 -->
@@ -272,7 +112,7 @@
                 <div id="searchResultHeader" class="mb-3" style="display:none; font-size: 0.85rem; color: #888;"></div>
 
                 <!-- 태그 필터 컴포넌트 -->
-                <div th:replace="~{fragments/components :: tagNav(${currentTag})}"></div>
+                <div th:replace="~{fragments/tag-nav :: tagNav(${currentTag})}"></div>
 
                 <!-- 콘텐츠 리스트 -->
                 <div id="contentList">
@@ -301,19 +141,24 @@
                                 <!-- 4. 하단 메타바 -->
                                 <div class="meta-bar">
                                     <img th:src="${siteLogos[content.siteName] != null ? siteLogos[content.siteName] : '/img/default-logo.svg'}"
-                                         class="site-logo-mini" alt="icon">
+                                         class="site-logo-mini" alt="icon"
+                                         onerror="this.onerror=null;this.src='/img/default-logo.svg'">
                                     <span class="fw-bold text-dark me-2" th:text="${content.siteName}">사이트명</span>
                                     <span class="me-2 text-muted">·</span>
                                     <span th:text="${#temporals.format(content.publishedAt, 'yyyy년 MM월 dd일')}">날짜</span>
                                     <span class="mx-2">·</span>
-                                    <span>조회 [[${content.viewCount}]]</span>
+                                    <span style="display:inline-flex; align-items:center; gap:3px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                        [[${content.viewCount}]]
+                                    </span>
                                 </div>
                             </div>
 
                             <!-- 5. 썸네일 (항상 표시, 없으면 기본 이미지) -->
                             <div class="thumbnail-box d-none d-md-block">
                                 <img th:src="${content.thumbnailUrl != null ? content.thumbnailUrl : '/img/default-thumbnail.svg'}"
-                                     class="thumbnail-img" alt="Thumbnail">
+                                     class="thumbnail-img" alt="Thumbnail"
+                                     onerror="this.onerror=null;this.src='/img/default-thumbnail.svg'">
                             </div>
                         </div>
                     </div>
@@ -322,12 +167,14 @@
                 </div><!-- /contentList -->
 
                 <!-- 페이징 -->
-                <nav id="pagination" th:if="${contents.totalPages > 1}" class="mt-5 mb-5">
+                <nav id="pagination" th:if="${contents.totalPages > 1}" class="mt-5 mb-5"
+                     th:with="startPage=${T(java.lang.Math).max(0, T(java.lang.Math).min(contents.number - 2, contents.totalPages - 5))},
+                              endPage=${T(java.lang.Math).min(contents.totalPages - 1, startPage + 4)}">
                     <ul class="pagination justify-content-center">
                         <li class="page-item" th:classappend="${contents.first} ? 'disabled'">
                             <a class="page-link border-0 bg-transparent text-muted px-3" th:href="@{/(page=${contents.number - 1}, tag=${currentTag}, q=${q})}">이전</a>
                         </li>
-                        <li th:each="i : ${#numbers.sequence(0, contents.totalPages - 1)}"
+                        <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
                             class="page-item" th:classappend="${i == contents.number} ? 'active'">
                             <a class="page-link border-0 rounded-circle mx-1" th:href="@{/(page=${i}, tag=${currentTag}, q=${q})}" th:text="${i + 1}">1</a>
                         </li>
@@ -338,85 +185,12 @@
                 </nav>
             </div>
 
-            <!-- 우측 사이드바: 수집 중인 기술 블로그 -->
-            <div class="source-sidebar d-none d-xl-block">
-                <div class="sidebar-card">
-                    <div class="sidebar-title">인기 기술 블로그</div>
-
-                    <!-- 상위 5개 -->
-                    <div class="source-item-wrap"
-                         th:each="source, stat : ${rssSources}"
-                         th:if="${stat.index < 5}"
-                         th:data-name="${source.siteName}"
-                         th:data-logo="${source.logoUrl != null ? source.logoUrl : '/img/default-logo.svg'}"
-                         th:data-posts="${source.postCount}"
-                         th:data-views="${#numbers.formatInteger(source.totalViewCount, 1, 'COMMA')}"
-                         th:data-latest="${source.latestPublishedAt != null ? #temporals.format(source.latestPublishedAt, 'MM월 dd일') : ''}"
-                         th:data-siteurl="${source.siteUrl}"
-                         onmouseenter="showHoverCard(event, this)"
-                         onmouseleave="hideHoverCard(this)">
-                        <div class="source-item">
-                            <img th:src="${source.logoUrl != null ? source.logoUrl : '/img/default-logo.svg'}" alt="logo">
-                            <span th:text="${source.siteName}">사이트명</span>
-                            <span class="active-dot" th:if="${source.active}"></span>
-                        </div>
-                    </div>
-
-                    <!-- 5개 초과 시 전체보기 버튼 -->
-                    <button th:if="${#lists.size(rssSources) > 5}"
-                            class="btn-view-all" onclick="openSourceModal()">
-                        전체보기 ([[${#lists.size(rssSources)}]]개) →
-                    </button>
-                </div>
-            </div>
+            <!-- 우측 사이드바: 인기 기술 블로그 -->
+            <th:block th:replace="~{fragments/source-sidebar :: sourceSidebar(${rssSources})}"></th:block>
         </div>
 
-        <!-- 공통 호버 카드 (JS로 제어) -->
-        <div id="hover-card">
-            <div class="hc-header">
-                <img id="hc-logo" src="" alt="logo">
-                <span id="hc-name" class="hc-name"></span>
-            </div>
-            <hr class="hc-divider">
-            <div class="hc-stat">
-                <span class="label">포스트</span>
-                <span id="hc-posts"></span>
-            </div>
-            <div class="hc-stat">
-                <span class="label">총 조회수</span>
-                <span id="hc-views"></span>
-            </div>
-            <div class="hc-stat" id="hc-latest-wrap">
-                <span class="label">마지막 포스트</span>
-                <span id="hc-latest"></span>
-            </div>
-            <a id="hc-visit" class="hc-visit" href="#" target="_blank">방문하기 →</a>
-        </div>
-
-        <!-- 전체보기 팝업 -->
-        <div class="source-modal-overlay" id="sourceModal" onclick="closeSourceModal(event)">
-            <div class="source-modal">
-                <div class="modal-header-row">
-                    <span class="modal-title">인기 기술 블로그</span>
-                    <button class="btn-close-modal" onclick="closeSourceModal()">✕</button>
-                </div>
-                <div th:each="source : ${rssSources}">
-                    <div class="source-item">
-                        <img th:src="${source.logoUrl != null ? source.logoUrl : '/img/default-logo.svg'}" alt="logo">
-                        <div style="flex:1; min-width:0;">
-                            <div th:text="${source.siteName}" style="font-weight:600; font-size:0.85rem;">사이트명</div>
-                            <div style="font-size:0.75rem; color:#aaa; margin-top:2px;">
-                                포스트 <span th:text="${source.postCount}">0</span>개
-                                · 조회 <span th:text="${#numbers.formatInteger(source.totalViewCount, 1, 'COMMA')}">0</span>회
-                            </div>
-                        </div>
-                        <span class="active-dot" th:if="${source.active}"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <script>
+        <script th:inline="javascript">
+            const siteLogosMap = /*[[${siteLogos}]]*/ {};
             function getReadIds() {
                 const ids = localStorage.getItem('read_content_ids');
                 return ids ? JSON.parse(ids).map(Number) : [];
@@ -479,14 +253,16 @@
                                                 </h5>
                                                 <p class="card-text">${c.summary || ''}</p>
                                                 <div class="meta-bar">
-                                                    <img src="/img/default-logo.svg" class="site-logo-mini" alt="icon">
+                                                    <img src="${siteLogosMap[c.siteName] || '/img/default-logo.svg'}" class="site-logo-mini" alt="icon"
+                                                         onerror="this.onerror=null;this.src='/img/default-logo.svg'">
                                                     <span class="fw-bold text-dark me-2">${c.siteName || ''}</span>
                                                     <span class="me-2 text-muted">·</span>
                                                     <span>${c.publishedAt ? c.publishedAt.substring(0,10).replace(/-/g, '.') : ''}</span>
                                                 </div>
                                             </div>
                                             <div class="thumbnail-box d-none d-md-block">
-                                                <img src="${c.thumbnailUrl || '/img/default-thumbnail.svg'}" class="thumbnail-img" alt="Thumbnail">
+                                                <img src="${c.thumbnailUrl || '/img/default-thumbnail.svg'}" class="thumbnail-img" alt="Thumbnail"
+                                                     onerror="this.onerror=null;this.src='/img/default-thumbnail.svg'">
                                             </div>
                                         </div>
                                     </div>
@@ -501,11 +277,13 @@
                             } else {
                                 paginationEl.style.display = '';
                                 const currentPage = data.data?.number || 0;
+                                const startPage = Math.max(0, Math.min(currentPage - 2, totalPages - 5));
+                                const endPage = Math.min(totalPages - 1, startPage + 4);
                                 let pageItems = '';
                                 pageItems += `<li class="page-item${currentPage === 0 ? ' disabled' : ''}">
                                     <a class="page-link border-0 bg-transparent text-muted px-3" href="#" onclick="doSearchPage(${currentPage - 1}); return false;">이전</a>
                                 </li>`;
-                                for (let i = 0; i < totalPages; i++) {
+                                for (let i = startPage; i <= endPage; i++) {
                                     pageItems += `<li class="page-item${i === currentPage ? ' active' : ''}">
                                         <a class="page-link border-0 px-3${i === currentPage ? ' text-white' : ' text-muted bg-transparent'}" href="#" onclick="doSearchPage(${i}); return false;">${i + 1}</a>
                                     </li>`;
@@ -539,70 +317,6 @@
 
             document.addEventListener('DOMContentLoaded', updateReadStatus);
             window.addEventListener('pageshow', updateReadStatus);
-
-            const hoverCard = document.getElementById('hover-card');
-            let hideTimer = null;
-
-            let activeItem = null;
-
-            function showHoverCard(e, el) {
-                clearTimeout(hideTimer);
-
-                // 이전 호버 해제
-                if (activeItem && activeItem !== el) {
-                    activeItem.querySelector('.source-item span:not(.active-dot)').style.color = '';
-                }
-                activeItem = el;
-
-                // 호버 텍스트 색상 변경
-                el.querySelector('.source-item span:not(.active-dot)').style.color = '#0d6efd';
-
-                const d = el.dataset;
-                document.getElementById('hc-logo').src = d.logo;
-                document.getElementById('hc-name').textContent = d.name;
-                document.getElementById('hc-posts').textContent = d.posts + '개';
-                document.getElementById('hc-views').textContent = d.views + '회';
-
-                const latestWrap = document.getElementById('hc-latest-wrap');
-                if (d.latest) {
-                    document.getElementById('hc-latest').textContent = d.latest;
-                    latestWrap.style.display = 'flex';
-                } else {
-                    latestWrap.style.display = 'none';
-                }
-
-                document.getElementById('hc-visit').href = d.siteurl || '#';
-
-                hoverCard.style.display = 'block';
-                positionHoverCard(el);
-            }
-
-            function positionHoverCard(el) {
-                const item = el.querySelector('.source-item');
-                const rect = item.getBoundingClientRect();
-                const y = rect.bottom;
-                const overflowX = rect.left + hoverCard.offsetWidth - window.innerWidth;
-                hoverCard.style.left = (overflowX > 0 ? rect.right - hoverCard.offsetWidth : rect.left) + 'px';
-                hoverCard.style.top  = y + 'px';
-            }
-
-            function hideHoverCard(el) {
-                if (el) el.querySelector('.source-item span:not(.active-dot)').style.color = '';
-                activeItem = null;
-                hideTimer = setTimeout(() => { hoverCard.style.display = 'none'; }, 150);
-            }
-
-            hoverCard.addEventListener('mouseenter', () => clearTimeout(hideTimer));
-            hoverCard.addEventListener('mouseleave', () => hideHoverCard());
-
-            function openSourceModal() {
-                document.getElementById('sourceModal').classList.add('show');
-            }
-            function closeSourceModal(e) {
-                if (!e || e.target === document.getElementById('sourceModal')) {
-                    document.getElementById('sourceModal').classList.remove('show');
-                }
-            }
         </script>
     </section>
 </body>

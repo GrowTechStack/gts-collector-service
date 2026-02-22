@@ -45,6 +45,19 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
+    public Page<ContentSummaryResponse> getContentsBySites(String tag, java.util.List<String> sites, Pageable pageable) {
+        if (sites == null || sites.isEmpty()) {
+            return getContents(tag, pageable);
+        }
+        if (StringUtils.hasText(tag)) {
+            return contentRepository.findAllBySiteNameInAndTagsContaining(sites, tag, pageable)
+                    .map(ContentSummaryResponse::from);
+        }
+        return contentRepository.findAllBySiteNameIn(sites, pageable)
+                .map(ContentSummaryResponse::from);
+    }
+
+    @Override
     public Page<ContentSummaryResponse> searchContents(String keyword, Pageable pageable) {
         return contentRepository.searchByKeyword(keyword, pageable)
                 .map(ContentSummaryResponse::from);

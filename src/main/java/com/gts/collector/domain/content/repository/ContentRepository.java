@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +30,20 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
      * 특정 태그를 포함하는 콘텐츠 목록을 페이징 조회합니다.
      */
     Page<Content> findAllByTagsContaining(String tag, Pageable pageable);
+
+    /**
+     * 지정된 사이트명 목록에 해당하는 콘텐츠를 페이징 조회합니다.
+     */
+    @Query("SELECT c FROM Content c WHERE c.siteName IN :siteNames")
+    Page<Content> findAllBySiteNameIn(@Param("siteNames") Collection<String> siteNames, Pageable pageable);
+
+    /**
+     * 지정된 사이트명 목록 + 태그 필터로 콘텐츠를 페이징 조회합니다.
+     */
+    @Query("SELECT c FROM Content c WHERE c.siteName IN :siteNames AND c.tags LIKE %:tag%")
+    Page<Content> findAllBySiteNameInAndTagsContaining(@Param("siteNames") Collection<String> siteNames,
+                                                       @Param("tag") String tag,
+                                                       Pageable pageable);
 
     /**
      * 제목 또는 요약에 키워드가 포함된 콘텐츠를 페이징 조회합니다.

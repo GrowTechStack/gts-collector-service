@@ -50,7 +50,8 @@
                             <tr th:each="source : ${sources}">
                                 <td class="ps-4">
                                     <img th:if="${source.logoUrl != null}" th:src="${source.logoUrl}"
-                                         class="site-logo-preview" style="width:24px; height:24px;" alt="Logo">
+                                         class="site-logo-preview" style="width:24px; height:24px;" alt="Logo"
+                                         onerror="this.onerror=null;this.src='/img/default-logo.svg'">
                                     <div th:unless="${source.logoUrl != null}" class="site-logo-preview d-flex align-items-center justify-content-center small text-muted">?</div>
                                 </td>
                                 <td class="fw-bold" th:text="${source.siteName}">사이트명</td>

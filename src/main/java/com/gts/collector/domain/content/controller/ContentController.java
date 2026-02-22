@@ -43,8 +43,9 @@ public class ContentController {
     @GetMapping
     public ApiResult<Page<ContentSummaryResponse>> getContents(
             @RequestParam(required = false) String tag,
+            @RequestParam(required = false) java.util.List<String> sites,
             @Parameter(hidden = true) @PageableDefault(size = 10, sort = "publishedAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ApiResult.success(contentService.getContents(tag, pageable));
+        return ApiResult.success(contentService.getContentsBySites(tag, sites, pageable));
     }
 
     /**

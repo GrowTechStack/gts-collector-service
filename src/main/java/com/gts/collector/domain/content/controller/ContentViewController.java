@@ -73,6 +73,16 @@ public class ContentViewController {
                                  Model model) {
         contentService.incrementViewCountIfNotViewed(id, "viewed_contents", request, response);
         model.addAttribute("content", contentService.getContent(id));
+
+        java.util.Map<String, String> siteLogos = rssSourceService.getAllSources().stream()
+                .filter(s -> s.logoUrl() != null)
+                .collect(java.util.stream.Collectors.toMap(
+                        com.gts.collector.domain.feed.dto.RssSourceResponse::siteName,
+                        com.gts.collector.domain.feed.dto.RssSourceResponse::logoUrl,
+                        (existing, replacement) -> existing
+                ));
+        model.addAttribute("siteLogos", siteLogos);
+
         return "summary";
     }
 }

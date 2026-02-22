@@ -20,6 +20,13 @@ public interface ContentService {
     Page<ContentSummaryResponse> getContents(String tag, Pageable pageable);
 
     /**
+     * 사이트명 목록으로 콘텐츠를 필터링하여 페이징 조회합니다. (태그 필터 병행 가능)
+     * @param tag 필터링할 태그 (null이면 전체)
+     * @param sites 필터링할 사이트명 목록 (null 또는 empty면 전체)
+     */
+    Page<ContentSummaryResponse> getContentsBySites(String tag, java.util.List<String> sites, Pageable pageable);
+
+    /**
      * 키워드로 콘텐츠를 검색합니다. (title, summary 대상)
      */
     Page<ContentSummaryResponse> searchContents(String keyword, Pageable pageable);
