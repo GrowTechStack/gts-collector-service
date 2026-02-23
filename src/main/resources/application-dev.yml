@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:./GrowTechStack.db;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+logging:
+  level:
+    org.hibernate.orm.queries: info
+    com.gts.collector: debug

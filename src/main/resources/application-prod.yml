@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:./GrowTechStack.db;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+ai-summary:
+  base-url: http://localhost:29998
+
+logging:
+  level:
+    org.hibernate.orm.queries: info
+    com.gts.collector: info
