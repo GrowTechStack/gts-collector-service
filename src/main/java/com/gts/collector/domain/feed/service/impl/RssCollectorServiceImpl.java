@@ -141,12 +141,14 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         Long savedId = saved.getId();
         String savedTitle = saved.getTitle();
         String savedSummary = saved.getSummary() != null ? saved.getSummary() : "";
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                summaryRequestProducer.send(savedId, savedTitle, savedSummary);
-            }
-        });
+        if (!savedSummary.isBlank()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    summaryRequestProducer.send(savedId, savedTitle, savedSummary);
+                }
+            });
+        }
         return true;
     }
 
