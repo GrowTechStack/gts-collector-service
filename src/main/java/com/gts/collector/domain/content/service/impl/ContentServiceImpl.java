@@ -121,6 +121,14 @@ public class ContentServiceImpl implements ContentService {
         return contentRepository.findLatestPublishedAtBySiteName(siteName);
     }
 
+    @Override
+    @Transactional
+    public void updateSummary(Long id, String summary) {
+        Content content = contentRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CONTENT_NOT_FOUND));
+        content.updateSummary(summary);
+    }
+
     /**
      * 모든 사이트 통계를 단일 GROUP BY 쿼리로 조회하여 Map으로 변환합니다.
      * N+1 방지 목적으로 사용됩니다.

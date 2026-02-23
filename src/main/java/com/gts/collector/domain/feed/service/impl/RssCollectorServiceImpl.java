@@ -4,6 +4,7 @@ import com.gts.collector.domain.content.entity.Content;
 import com.gts.collector.domain.content.entity.ContentType;
 import com.gts.collector.domain.content.repository.ContentRepository;
 import com.gts.collector.domain.feed.service.RssCollectorService;
+import com.gts.collector.global.kafka.SummaryRequestProducer;
 import com.gts.collector.global.error.ErrorCode;
 import com.gts.collector.global.error.exception.BusinessException;
 import com.rometools.rome.feed.synd.SyndEnclosure;
@@ -18,6 +19,8 @@ import org.jdom2.Element;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -44,6 +47,7 @@ public class RssCollectorServiceImpl implements RssCollectorService {
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 GrowTechStackBot/1.0";
 
     private final ContentRepository contentRepository;
+    private final SummaryRequestProducer summaryRequestProducer;
 
     /**
      * 지정된 RSS URL에서 피드를 파싱하고 신규 콘텐츠를 저장합니다.
@@ -133,7 +137,16 @@ public class RssCollectorServiceImpl implements RssCollectorService {
                 .commentEnabled(false)
                 .build();
 
-        contentRepository.save(content);
+        Content saved = contentRepository.save(content);
+        Long savedId = saved.getId();
+        String savedTitle = saved.getTitle();
+        String savedSummary = saved.getSummary() != null ? saved.getSummary() : "";
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                summaryRequestProducer.send(savedId, savedTitle, savedSummary);
+            }
+        });
         return true;
     }
 

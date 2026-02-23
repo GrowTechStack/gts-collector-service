@@ -64,4 +64,9 @@ public interface ContentService {
      * N+1 방지용으로 사용합니다.
      */
     java.util.Map<String, com.gts.collector.domain.content.dto.SiteStatsDto> findAllSiteStatsMap();
+
+    /**
+     * 콘텐츠의 AI 요약문을 업데이트합니다.
+     */
+    void updateSummary(Long id, String summary);
 }

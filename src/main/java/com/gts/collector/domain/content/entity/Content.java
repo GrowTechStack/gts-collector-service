@@ -73,6 +73,13 @@ public class Content {
     }
 
     /**
+     * AI 생성 요약문으로 summary를 업데이트합니다.
+     */
+    public void updateSummary(String summary) {
+        this.summary = summary;
+    }
+
+    /**
      * 메타데이터(사이트명, 태그, 썸네일)를 업데이트합니다.
      */
     public void updateMetadata(String siteName, String tags, String thumbnailUrl) {

@@ -54,28 +54,26 @@ MERGE INTO rss_sources (site_name, rss_url, logo_url, site_url, active) KEY (rss
 VALUES ('29CM', 'https://medium.com/feed/29cm', 'https://miro.medium.com/v2/resize:fill:160:160/1*TP1aY6ZJaPSPs3fKA6sYKA.png', 'https://medium.com/29cm', true);
 
 MERGE INTO rss_sources (site_name, rss_url, logo_url, site_url, active) KEY (rss_url)
-VALUES ('마켓컬리', 'https://helloworld.kurly.com/feed.xml', 'https://helloworld.kurly.com/favicon.ico', 'https://helloworld.kurly.com', true);
+VALUES ('마켓컬리', 'https://helloworld.kurly.com/feed.xml', 'https://helloworld.kurly.com/assets/logo/ico_32.png', 'https://helloworld.kurly.com', true);
 
 MERGE INTO rss_sources (site_name, rss_url, logo_url, site_url, active) KEY (rss_url)
-VALUES ('카카오엔터프라이즈', 'https://tech.kakaoenterprise.com/feed', 'https://tech.kakaoenterprise.com/favicon.ico', 'https://tech.kakaoenterprise.com', true);
+VALUES ('카카오엔터프라이즈', 'https://tech.kakaoenterprise.com/feed', 'https://tistory4.daumcdn.net/tistory/3769165/07aa76d9ba224eb289bef9ca9e5f2e32', 'https://tech.kakaoenterprise.com', true);
 
 MERGE INTO rss_sources (site_name, rss_url, logo_url, site_url, active) KEY (rss_url)
-VALUES ('데브시스터즈', 'https://tech.devsisters.com/rss.xml', 'https://tech.devsisters.com/favicon.ico', 'https://tech.devsisters.com', true);
+VALUES ('데브시스터즈', 'https://tech.devsisters.com/rss.xml', '
+https://tech.devsisters.com/favicon-32x32.png?v=9dce5f969c7c2888a235a394755ba1a5', 'https://tech.devsisters.com', true);
 
 MERGE INTO rss_sources (site_name, rss_url, logo_url, site_url, active) KEY (rss_url)
 VALUES ('직방', 'https://medium.com/feed/zigbang', 'https://miro.medium.com/v2/resize:fill:160:160/1*_SRVUENl0RXh1VwmFuoHrQ.png', 'https://medium.com/zigbang', false);
 
 MERGE INTO rss_sources (site_name, rss_url, logo_url, site_url, active) KEY (rss_url)
-VALUES ('리디', 'https://www.ridicorp.com/feed', 'https://www.ridicorp.com/favicon.ico', 'https://www.ridicorp.com', true);
-
-MERGE INTO rss_sources (site_name, rss_url, logo_url, site_url, active) KEY (rss_url)
-VALUES ('NHN Toast', 'https://meetup.toast.com/rss', 'https://meetup.toast.com/favicon.ico', 'https://meetup.toast.com', true);
+VALUES ('NHN Toast', 'https://meetup.toast.com/rss', 'https://meetup.nhncloud.com/resources/img/favicon.ico', 'https://meetup.toast.com', true);
 
 MERGE INTO rss_sources (site_name, rss_url, logo_url, site_url, active) KEY (rss_url)
 VALUES ('GeekNews', 'https://news.hada.io/rss/news', 'https://news.hada.io/favicon.ico', 'https://news.hada.io', true);
 
 MERGE INTO rss_sources (site_name, rss_url, logo_url, site_url, active) KEY (rss_url)
-VALUES ('개발자스럽다', 'https://blog.gaerae.com/feeds/posts/default?alt=rss', 'https://blog.gaerae.com/favicon.ico', 'https://blog.gaerae.com', true);
+VALUES ('개발자스럽다', 'https://blog.gaerae.com/feeds/posts/default?alt=rss', 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhoVtq5iot4FBRLA29jUDX-zVf7vcL7q5CBEZakJ6aolro0hg-1o5m20TcLjutCUi2yJl5q0HlDZsj87V8ZAQ3JyTwc8DUEfBJ6lInD31uTa5PznoZU_DW3i0G6PdeDcYR4NYpxz0u545F1H_NUb7jNl_TYfoW3ONpHKI9teefnWb9hGQB9Td6DvNg8g2U/w35-h35-p-k-no-nu/gaeraecom_logo_black.webp', 'https://blog.gaerae.com', true);
 
 MERGE INTO rss_sources (site_name, rss_url, logo_url, site_url, active) KEY (rss_url)
-VALUES ('44BITS', 'https://www.44bits.io/ko/feed/all', 'https://www.44bits.io/favicon.ico', 'https://www.44bits.io', true);
+VALUES ('44BITS', 'https://www.44bits.io/ko/feed/all', 'https://www.44bits.io/favicon.png', 'https://www.44bits.io', true);
