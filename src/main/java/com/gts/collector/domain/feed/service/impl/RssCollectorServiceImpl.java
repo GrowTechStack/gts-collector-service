@@ -59,6 +59,7 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         try {
             connection = (HttpURLConnection) new URL(rssUrl).openConnection();
             connection.setRequestProperty("User-Agent", USER_AGENT);
+            connection.setRequestProperty("Accept-Encoding", "identity"); // gzip 압축 비활성화 (XmlReader가 압축 해제 불가)
             connection.setConnectTimeout(10000);
             connection.setReadTimeout(15000);
 
@@ -122,7 +123,7 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         Content content = Content.builder()
                 .type(ContentType.EXTERNAL)
                 .title(entry.getTitle())
-                .summary(entry.getDescription() != null ? entry.getDescription().getValue() : "")
+                .summary(entry.getDescription() != null ? stripHtml(entry.getDescription().getValue()) : "")
                 .originalUrl(originalUrl)
                 .siteName(siteName)
                 .thumbnailUrl(thumbnailUrl)
@@ -251,5 +252,25 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         if (contentText.contains("design") || contentText.contains("ui") || contentText.contains("ux")) autoTags.append("design,");
 
         return autoTags.length() > 0 ? autoTags.substring(0, autoTags.length() - 1) : "tech";
+    }
+
+    /**
+     * HTML 태그와 엔티티를 제거하고 순수 텍스트만 반환합니다.
+     * RSS summary 저장 시 날 HTML이 노출되는 것을 방지합니다.
+     * 최대 300자로 잘라 저장합니다.
+     */
+    private String stripHtml(String html) {
+        if (html == null || html.isBlank()) return "";
+        String text = html
+                .replaceAll("<[^>]+>", "")          // HTML 태그 제거
+                .replaceAll("&nbsp;", " ")           // HTML 엔티티 변환
+                .replaceAll("&amp;", "&")
+                .replaceAll("&lt;", "<")
+                .replaceAll("&gt;", ">")
+                .replaceAll("&quot;", "\"")
+                .replaceAll("&#[0-9]+;", "")         // 숫자 엔티티 제거
+                .replaceAll("\\s+", " ")             // 연속 공백 정리
+                .trim();
+        return text.length() > 300 ? text.substring(0, 300) + "..." : text;
     }
 }
