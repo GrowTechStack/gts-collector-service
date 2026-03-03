@@ -18,7 +18,7 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
 
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
 
 ai-summary:
   base-url: http://gts-ai-summary:29998
