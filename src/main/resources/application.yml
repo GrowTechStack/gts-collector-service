@@ -18,6 +18,7 @@ spring:
       write-dates-as-timestamps: false
 
   kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -37,4 +38,4 @@ springdoc:
     operations-sorter: alpha
 
 ai-summary:
-  base-url: http://localhost:29998
+  base-url: ${AI_SUMMARY_BASE_URL:http://localhost:29998}
