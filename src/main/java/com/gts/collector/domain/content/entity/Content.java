@@ -47,9 +47,11 @@ public class Content {
 
     private boolean commentEnabled;
 
+    private boolean aiSummarized; // AI 요약 완료 여부
+
     @Builder
-    public Content(ContentType type, String title, String summary, String body, 
-                   String originalUrl, String siteName, String thumbnailUrl, String tags, 
+    public Content(ContentType type, String title, String summary, String body,
+                   String originalUrl, String siteName, String thumbnailUrl, String tags,
                    LocalDateTime publishedAt, boolean commentEnabled) {
         this.type = type;
         this.title = title;
@@ -62,6 +64,7 @@ public class Content {
         this.publishedAt = publishedAt;
         this.commentEnabled = commentEnabled;
         this.viewCount = 0;
+        this.aiSummarized = false;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -73,10 +76,11 @@ public class Content {
     }
 
     /**
-     * AI 생성 요약문으로 summary를 업데이트합니다.
+     * AI 생성 요약문으로 summary를 업데이트하고 AI 요약 완료 상태로 변경합니다.
      */
     public void updateSummary(String summary) {
         this.summary = summary;
+        this.aiSummarized = true;
     }
 
     /**

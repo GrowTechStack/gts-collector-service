@@ -17,7 +17,8 @@ public record ContentResponse(
     String thumbnailUrl,
     String tags,
     int viewCount,
-    LocalDateTime publishedAt
+    LocalDateTime publishedAt,
+    boolean aiSummarized
 ) {
     public static ContentResponse from(Content content) {
         return new ContentResponse(
@@ -31,7 +32,8 @@ public record ContentResponse(
             content.getThumbnailUrl(),
             content.getTags(),
             content.getViewCount(),
-            content.getPublishedAt()
+            content.getPublishedAt(),
+            content.isAiSummarized()
         );
     }
 }
