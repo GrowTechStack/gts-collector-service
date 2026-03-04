@@ -7,12 +7,13 @@ public interface CollectorService {
 
     /**
      * 모든 활성화된 RSS 출처로부터 콘텐츠를 즉시 수집합니다.
+     * @param full true면 전체 수집, false면 최근 2일치만 수집
      * @return 수집된 전체 콘텐츠 개수
      */
-    int collectAll();
+    int collectAll(boolean full);
 
     /**
-     * 특정 RSS 출처 하나로부터 콘텐츠를 즉시 수집합니다.
+     * 특정 RSS 출처 하나로부터 콘텐츠를 즉시 수집합니다. (전체 수집)
      * @param sourceId 수집할 RSS 출처 ID
      * @return 수집된 콘텐츠 개수
      */

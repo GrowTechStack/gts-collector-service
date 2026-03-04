@@ -59,6 +59,13 @@
                     <hr class="my-4 text-light">
 
                     <!-- 요약 본문 -->
+                    <div th:if="${content.summary != '해당 컨텐츠는 AI가 요약할 내용이 없습니다.'}"
+                         class="d-flex align-items-center gap-2 mb-3">
+                        <span style="font-size:0.8rem; padding:3px 10px; background:#f0f4ff; color:#4a6cf7; border-radius:20px; border:1px solid #d0dcff; font-weight:600;">
+                            ✦ AI 요약
+                        </span>
+                        <small class="text-muted">이 내용은 AI가 원문을 요약한 것입니다.</small>
+                    </div>
                     <div class="content-body mb-5 fs-5 leading-relaxed text-secondary" style="line-height: 1.8;">
                         <p th:text="${content.summary}">요약 내용이 표시됩니다.</p>
                     </div>

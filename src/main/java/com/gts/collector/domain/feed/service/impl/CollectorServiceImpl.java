@@ -36,8 +36,8 @@ public class CollectorServiceImpl implements CollectorService {
      */
     @Override
     @Transactional
-    public int collectAll() {
-        log.info("===== RSS 수집 시작 =====");
+    public int collectAll(boolean full) {
+        log.info("===== RSS 수집 시작 | 모드={} =====", full ? "전체" : "최근 2일");
 
         List<RssSource> activeSources = rssSourceRepository.findAllByActiveTrue();
         log.info("활성 RSS 출처 {}개 처리 예정", activeSources.size());
@@ -53,8 +53,9 @@ public class CollectorServiceImpl implements CollectorService {
             String errorMessage = null;
 
             try {
-                log.info("[수집 시작] 사이트={}, URL={}", source.getSiteName(), source.getRssUrl());
-                collectedCount = rssCollectorService.collect(source.getRssUrl(), source.getSiteName());
+                LocalDateTime since = full ? null : LocalDateTime.now().minusDays(2);
+                log.info("[수집 시작] 사이트={}, URL={}, since={}", source.getSiteName(), source.getRssUrl(), since);
+                collectedCount = rssCollectorService.collect(source.getRssUrl(), source.getSiteName(), since);
                 success = true;
                 successCount++;
                 totalCollectedCount += collectedCount;
@@ -95,8 +96,8 @@ public class CollectorServiceImpl implements CollectorService {
         String errorMessage = null;
 
         try {
-            log.info("[수집 시작] 사이트={}, URL={}", source.getSiteName(), source.getRssUrl());
-            collectedCount = rssCollectorService.collect(source.getRssUrl(), source.getSiteName());
+            log.info("[수집 시작] 사이트={}, URL={} (전체 수집)", source.getSiteName(), source.getRssUrl());
+            collectedCount = rssCollectorService.collect(source.getRssUrl(), source.getSiteName(), null);
             success = true;
             log.info("[수집 성공] 사이트={}, 수집건수={}", source.getSiteName(), collectedCount);
         } catch (BusinessException e) {

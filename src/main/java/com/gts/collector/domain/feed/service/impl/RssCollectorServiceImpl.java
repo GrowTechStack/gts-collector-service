@@ -26,6 +26,7 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -52,11 +53,12 @@ public class RssCollectorServiceImpl implements RssCollectorService {
     /**
      * 지정된 RSS URL에서 피드를 파싱하고 신규 콘텐츠를 저장합니다.
      * 기존에 저장된 URL은 중복 저장되지 않으며, 썸네일이 없는 경우에만 업데이트합니다.
+     * since가 null이 아니면 해당 시점 이후 발행된 글만 수집합니다.
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public int collect(String rssUrl, String siteName) {
-        log.info("Starting RSS collection from: {} ({})", siteName, rssUrl);
+    public int collect(String rssUrl, String siteName, LocalDateTime since) {
+        log.info("Starting RSS collection from: {} ({}) since={}", siteName, rssUrl, since);
         int savedCount = 0;
 
         HttpURLConnection connection = null;
@@ -71,6 +73,14 @@ public class RssCollectorServiceImpl implements RssCollectorService {
             List<SyndEntry> entries = feed.getEntries();
 
             for (SyndEntry entry : entries) {
+                if (since != null && entry.getPublishedDate() != null) {
+                    LocalDateTime publishedAt = entry.getPublishedDate().toInstant()
+                            .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                    if (publishedAt.isBefore(since)) {
+                        log.debug("[{}] 날짜 필터 스킵: publishedAt={}, since={}", siteName, publishedAt, since);
+                        continue;
+                    }
+                }
                 if (saveOrUpdate(entry, siteName)) {
                     savedCount++;
                 }
@@ -124,10 +134,13 @@ public class RssCollectorServiceImpl implements RssCollectorService {
             return false;
         }
 
+        String rawSummary = entry.getDescription() != null ? stripHtml(entry.getDescription().getValue()) : "";
+        String summary = rawSummary.isBlank() ? "해당 컨텐츠는 AI가 요약할 내용이 없습니다." : rawSummary;
+
         Content content = Content.builder()
                 .type(ContentType.EXTERNAL)
                 .title(entry.getTitle())
-                .summary(entry.getDescription() != null ? stripHtml(entry.getDescription().getValue()) : "")
+                .summary(summary)
                 .originalUrl(originalUrl)
                 .siteName(siteName)
                 .thumbnailUrl(thumbnailUrl)
@@ -140,12 +153,11 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         Content saved = contentRepository.save(content);
         Long savedId = saved.getId();
         String savedTitle = saved.getTitle();
-        String savedSummary = saved.getSummary() != null ? saved.getSummary() : "";
-        if (!savedSummary.isBlank()) {
+        if (!rawSummary.isBlank()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    summaryRequestProducer.send(savedId, savedTitle, savedSummary);
+                    summaryRequestProducer.send(savedId, savedTitle, rawSummary);
                 }
             });
         }
@@ -270,21 +282,28 @@ public class RssCollectorServiceImpl implements RssCollectorService {
     }
 
     /**
-     * HTML 태그와 엔티티를 제거하고 순수 텍스트만 반환합니다.
-     * RSS summary 저장 시 날 HTML이 노출되는 것을 방지합니다.
+     * HTML 태그, HTML 엔티티, 마크다운 문법을 제거하고 순수 텍스트만 반환합니다.
+     * RSS summary 저장 시 날 HTML/마크다운이 노출되는 것을 방지합니다.
      * 최대 300자로 잘라 저장합니다.
      */
     private String stripHtml(String html) {
         if (html == null || html.isBlank()) return "";
         String text = html
-                .replaceAll("<[^>]+>", "")          // HTML 태그 제거
-                .replaceAll("&nbsp;", " ")           // HTML 엔티티 변환
+                .replaceAll("<[^>]+>", "")                      // HTML 태그 제거
+                .replaceAll("&nbsp;", " ")                       // HTML 엔티티 변환
                 .replaceAll("&amp;", "&")
                 .replaceAll("&lt;", "<")
                 .replaceAll("&gt;", ">")
                 .replaceAll("&quot;", "\"")
-                .replaceAll("&#[0-9]+;", "")         // 숫자 엔티티 제거
-                .replaceAll("\\s+", " ")             // 연속 공백 정리
+                .replaceAll("&#[0-9]+;", "")                     // 숫자 엔티티 제거
+                .replaceAll("!\\[[^\\]]*\\]\\([^)]*\\)", "")    // 마크다운 이미지 제거: ![]()
+                .replaceAll("\\[[^\\]]*\\]\\([^)]*\\)", "")     // 마크다운 링크 제거: []()
+                .replaceAll("#{1,6}\\s*", "")                    // 마크다운 헤더 제거: ## ###
+                .replaceAll("[*_]{1,3}([^*_]+)[*_]{1,3}", "$1") // 마크다운 강조 제거: **bold**, *italic*
+                .replaceAll("```[\\s\\S]*?```", "")              // 코드블록 제거
+                .replaceAll("`[^`]+`", "")                       // 인라인 코드 제거
+                .replaceAll("^>\\s*", "")                        // 인용구 제거: >
+                .replaceAll("\\s+", " ")                         // 연속 공백 정리
                 .trim();
         return text.length() > 300 ? text.substring(0, 300) + "..." : text;
     }

@@ -19,7 +19,10 @@
     <section>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold">관리자</h2>
-            <button class="btn btn-primary px-4 fw-bold" onclick="collectNow()">즉시 수집 실행</button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary px-4 fw-bold" onclick="collectNow(false)">최근 2일 수집</button>
+                <button class="btn btn-outline-primary px-4 fw-bold" onclick="collectNow(true)">전체 수집</button>
+            </div>
         </div>
 
         <!-- 탭 네비게이션 -->
@@ -215,10 +218,11 @@
                 else alert('수정 오류');
             }
 
-            async function collectNow() {
-                if (!confirm('즉시 수집을 실행하시겠습니까?')) return;
+            async function collectNow(full) {
+                const label = full ? '전체 수집' : '최근 2일 수집';
+                if (!confirm(`${label}을 실행하시겠습니까?`)) return;
                 const toast = new bootstrap.Toast(document.getElementById('liveToast'));
-                const response = await fetch('/api/v1/collector/collect', { method: 'POST' });
+                const response = await fetch(`/api/v1/collector/collect?full=${full}`, { method: 'POST' });
                 const result = await response.json();
                 document.getElementById('toastMessage').innerText = result.success ?
                     `${result.data}개의 콘텐츠를 수집했습니다!` : '오류';
