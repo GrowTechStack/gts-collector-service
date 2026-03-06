@@ -1,5 +1,7 @@
 package com.gts.collector.domain.feed.service.impl;
 
+import com.gts.collector.domain.content.entity.Content;
+import com.gts.collector.domain.content.repository.ContentRepository;
 import com.gts.collector.domain.feed.entity.CollectorLog;
 import com.gts.collector.domain.feed.entity.RssSource;
 import com.gts.collector.domain.feed.repository.CollectorLogRepository;
@@ -9,6 +11,7 @@ import com.gts.collector.domain.feed.service.RssCollectorService;
 import com.gts.collector.global.component.CollectionStatus;
 import com.gts.collector.global.error.ErrorCode;
 import com.gts.collector.global.error.exception.BusinessException;
+import com.gts.collector.global.kafka.SummaryRequestProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,8 @@ public class CollectorServiceImpl implements CollectorService {
     private final RssSourceRepository rssSourceRepository;
     private final CollectorLogRepository collectorLogRepository;
     private final CollectionStatus collectionStatus;
+    private final ContentRepository contentRepository;
+    private final SummaryRequestProducer summaryRequestProducer;
 
     /**
      * 활성화된 모든 RSS 출처에서 콘텐츠를 수집합니다.
@@ -127,6 +132,28 @@ public class CollectorServiceImpl implements CollectorService {
         }
 
         return collectedCount;
+    }
+
+    /**
+     * 요약이 없는 기존 콘텐츠에 대해 AI 요약 요청을 재전송합니다.
+     */
+    @Override
+    public int resummary() {
+        List<Content> targets = contentRepository.findAllBySummaryIsNullAndBodyIsNotNull();
+        log.info("===== 미요약 콘텐츠 재요약 시작 | 대상={}건 =====", targets.size());
+        int count = 0;
+        for (Content content : targets) {
+            try {
+                String body = content.getBody().length() > 3000
+                        ? content.getBody().substring(0, 3000) : content.getBody();
+                summaryRequestProducer.send(content.getId(), content.getTitle(), body);
+                count++;
+            } catch (Exception e) {
+                log.error("[재요약 실패] contentId={}, 원인={}", content.getId(), e.getMessage());
+            }
+        }
+        log.info("===== 미요약 콘텐츠 재요약 완료 | 요청={}건 =====", count);
+        return count;
     }
 
     /**

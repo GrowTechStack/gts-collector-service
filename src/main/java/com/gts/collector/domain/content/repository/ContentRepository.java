@@ -71,6 +71,11 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
     Optional<LocalDateTime> findLatestPublishedAtBySiteName(@Param("siteName") String siteName);
 
     /**
+     * 요약이 없고 본문이 있는 콘텐츠 목록을 조회합니다. (재요약 대상)
+     */
+    List<Content> findAllBySummaryIsNullAndBodyIsNotNull();
+
+    /**
      * 모든 사이트의 통계(콘텐츠 수, 총 조회수, 최신 발행일)를 siteName 기준으로 그룹핑하여 한 번에 조회합니다.
      * N+1 문제 방지를 위해 getAllSourcesWithStats()에서 사용합니다.
      */

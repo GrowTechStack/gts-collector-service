@@ -18,4 +18,10 @@ public interface CollectorService {
      * @return 수집된 콘텐츠 개수
      */
     int collectOne(Long sourceId);
+
+    /**
+     * 요약이 없는 기존 콘텐츠에 대해 AI 요약 요청을 재전송합니다.
+     * @return 요약 요청을 보낸 콘텐츠 개수
+     */
+    int resummary();
 }

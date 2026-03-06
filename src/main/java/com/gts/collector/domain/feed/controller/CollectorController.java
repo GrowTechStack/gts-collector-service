@@ -68,4 +68,10 @@ public class CollectorController {
         collectionStatus.start();
         return ApiResult.success(Map.of("running", true));
     }
+
+    @Operation(summary = "미요약 콘텐츠 재요약", description = "요약이 없는 기존 콘텐츠에 대해 AI 요약 요청을 재전송합니다.")
+    @PostMapping("/resummary")
+    public ApiResult<Integer> resummary() {
+        return ApiResult.success(collectorService.resummary());
+    }
 }
