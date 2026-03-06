@@ -6,6 +6,7 @@ import com.gts.collector.domain.feed.repository.CollectorLogRepository;
 import com.gts.collector.domain.feed.repository.RssSourceRepository;
 import com.gts.collector.domain.feed.service.CollectorService;
 import com.gts.collector.domain.feed.service.RssCollectorService;
+import com.gts.collector.global.component.CollectionStatus;
 import com.gts.collector.global.error.ErrorCode;
 import com.gts.collector.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class CollectorServiceImpl implements CollectorService {
     private final RssCollectorService rssCollectorService;
     private final RssSourceRepository rssSourceRepository;
     private final CollectorLogRepository collectorLogRepository;
+    private final CollectionStatus collectionStatus;
 
     /**
      * 활성화된 모든 RSS 출처에서 콘텐츠를 수집합니다.
@@ -37,6 +39,10 @@ public class CollectorServiceImpl implements CollectorService {
     @Override
     @Transactional
     public int collectAll(boolean full) {
+        if (!collectionStatus.isRunning()) {
+            log.info("RSS 수집이 중지 상태입니다. collectAll 실행 생략.");
+            return 0;
+        }
         log.info("===== RSS 수집 시작 | 모드={} =====", full ? "전체" : "최근 2일");
 
         List<RssSource> activeSources = rssSourceRepository.findAllByActiveTrue();
@@ -47,6 +53,11 @@ public class CollectorServiceImpl implements CollectorService {
         int failCount = 0;
 
         for (RssSource source : activeSources) {
+            if (!collectionStatus.isRunning()) {
+                log.info("수집 중지 요청 감지. 나머지 출처 수집을 중단합니다.");
+                break;
+            }
+
             LocalDateTime startTime = LocalDateTime.now();
             int collectedCount = 0;
             boolean success = false;
@@ -85,6 +96,10 @@ public class CollectorServiceImpl implements CollectorService {
     @Override
     @Transactional
     public int collectOne(Long sourceId) {
+        if (!collectionStatus.isRunning()) {
+            log.info("RSS 수집이 중지 상태입니다. collectOne 실행 생략.");
+            return 0;
+        }
         RssSource source = rssSourceRepository.findById(sourceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RSS_SOURCE_NOT_FOUND));
 
