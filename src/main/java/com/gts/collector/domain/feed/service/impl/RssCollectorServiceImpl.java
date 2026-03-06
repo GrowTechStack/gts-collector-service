@@ -242,9 +242,8 @@ public class RssCollectorServiceImpl implements RssCollectorService {
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
 
-            byte[] buffer = new byte[65536];
-            int bytesRead = connection.getInputStream().read(buffer);
-            String html = bytesRead > 0 ? new String(buffer, 0, bytesRead) : "";
+            byte[] buffer = connection.getInputStream().readNBytes(65536);
+            String html = new String(buffer);
 
             Pattern ogPattern = Pattern.compile("<meta[^>]+property=['\"]og:image['\"][^>]+content=['\"]([^'\"]+)['\"]");
             Matcher matcher = ogPattern.matcher(html);
