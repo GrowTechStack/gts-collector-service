@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: GrowTechStack
+    name: gts-collector-service
   profiles:
     active: dev
 
@@ -39,3 +39,10 @@ springdoc:
 
 ai-summary:
   base-url: ${AI_SUMMARY_BASE_URL:http://localhost:29998}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
