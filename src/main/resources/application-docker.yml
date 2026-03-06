@@ -26,6 +26,9 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    producer:
+      properties:
+        buffer.memory: 8388608
 
 ai-summary:
   base-url: http://gts-ai-summary:29998
