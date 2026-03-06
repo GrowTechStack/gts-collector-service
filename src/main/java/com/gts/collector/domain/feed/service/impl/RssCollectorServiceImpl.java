@@ -155,10 +155,11 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         Long savedId = saved.getId();
         String savedTitle = saved.getTitle();
         if (body != null) {
+            String bodyForSummary = body.length() > 3000 ? body.substring(0, 3000) : body;
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    summaryRequestProducer.send(savedId, savedTitle, body);
+                    summaryRequestProducer.send(savedId, savedTitle, bodyForSummary);
                 }
             });
         }
