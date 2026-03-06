@@ -134,13 +134,14 @@ public class RssCollectorServiceImpl implements RssCollectorService {
             return false;
         }
 
-        String rawSummary = entry.getDescription() != null ? stripHtml(entry.getDescription().getValue()) : "";
-        String summary = rawSummary.isBlank() ? "해당 컨텐츠는 AI가 요약할 내용이 없습니다." : rawSummary;
+        String rawBody = entry.getDescription() != null ? stripHtml(entry.getDescription().getValue()) : "";
+        String body = rawBody.isBlank() ? null : rawBody;
 
         Content content = Content.builder()
                 .type(ContentType.EXTERNAL)
                 .title(entry.getTitle())
-                .summary(summary)
+                .summary(null)
+                .body(body)
                 .originalUrl(originalUrl)
                 .siteName(siteName)
                 .thumbnailUrl(thumbnailUrl)
@@ -153,11 +154,11 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         Content saved = contentRepository.save(content);
         Long savedId = saved.getId();
         String savedTitle = saved.getTitle();
-        if (!rawSummary.isBlank()) {
+        if (body != null) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    summaryRequestProducer.send(savedId, savedTitle, rawSummary);
+                    summaryRequestProducer.send(savedId, savedTitle, body);
                 }
             });
         }
