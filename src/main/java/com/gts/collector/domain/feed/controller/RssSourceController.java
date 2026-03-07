@@ -2,6 +2,7 @@ package com.gts.collector.domain.feed.controller;
 
 import com.gts.collector.domain.feed.dto.RssSourceRequest;
 import com.gts.collector.domain.feed.dto.RssSourceResponse;
+import com.gts.collector.domain.feed.dto.RssSourceStatsResponse;
 import com.gts.collector.domain.feed.service.RssSourceService;
 import com.gts.collector.global.common.response.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,10 +24,10 @@ public class RssSourceController {
 
     private final RssSourceService rssSourceService;
 
-    @Operation(summary = "모든 RSS 출처 조회", description = "등록된 모든 RSS 출처 목록을 조회합니다.")
+    @Operation(summary = "모든 RSS 출처 조회", description = "등록된 모든 RSS 출처 목록을 통계(포스트 수, 조회수, 최신 발행일) 포함하여 조회합니다.")
     @GetMapping
-    public ApiResult<List<RssSourceResponse>> getAllSources() {
-        return ApiResult.success(rssSourceService.getAllSources());
+    public ApiResult<List<RssSourceStatsResponse>> getAllSources() {
+        return ApiResult.success(rssSourceService.getAllSourcesWithStats());
     }
 
     @Operation(summary = "RSS 출처 상세 조회", description = "특정 ID의 RSS 출처 정보를 조회합니다.")
