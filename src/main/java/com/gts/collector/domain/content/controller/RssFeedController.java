@@ -51,7 +51,7 @@ public class RssFeedController {
             if (content.summary() != null) {
                 xml.append("      <description>").append(escape(content.summary())).append("</description>\n");
             }
-            xml.append("      <pubDate>").append(RFC_822.format(content.publishedAt())).append("</pubDate>\n");
+            xml.append("      <pubDate>").append(RFC_822.format(content.publishedAt().atZone(ZoneId.of("Asia/Seoul")))).append("</pubDate>\n");
             xml.append("    </item>\n");
         }
 
