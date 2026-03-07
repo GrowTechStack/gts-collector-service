@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 
 @Slf4j
@@ -25,6 +26,9 @@ import java.util.List;
 public class AccessLogServiceImpl implements AccessLogService {
 
     private final AccessLogRepository accessLogRepository;
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final ZoneId UTC = ZoneId.of("UTC");
 
     @Async
     @Override
@@ -42,8 +46,10 @@ public class AccessLogServiceImpl implements AccessLogService {
     public AccessStatsResponse getStats() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime fiveMinutesAgo = now.minusMinutes(5);
-        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
-        LocalDateTime monthStart = YearMonth.now().atDay(1).atStartOfDay();
+        LocalDateTime todayStart = LocalDate.now(KST).atStartOfDay(KST)
+                .withZoneSameInstant(UTC).toLocalDateTime();
+        LocalDateTime monthStart = YearMonth.now(KST).atDay(1).atStartOfDay(KST)
+                .withZoneSameInstant(UTC).toLocalDateTime();
 
         long activeNow = accessLogRepository.countDistinctIpSince(fiveMinutesAgo);
         long todayUv = accessLogRepository.countDistinctIpSince(todayStart);
