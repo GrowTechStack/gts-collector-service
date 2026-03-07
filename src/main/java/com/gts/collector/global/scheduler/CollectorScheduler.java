@@ -23,7 +23,7 @@ public class CollectorScheduler {
     /**
      * 매일 자정(00:00)에 DB에 등록된 활성화된 모든 RSS 출처에서 최근 2일치 글 수집
      */
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 15 * * *")
     public void collectRss() {
         if (!collectionStatus.isRunning()) {
             log.info("RSS collection is stopped. Skipping scheduled collection.");
@@ -37,7 +37,7 @@ public class CollectorScheduler {
     /**
      * 매일 새벽 3시에 30일 이상 오래된 접속 로그를 삭제합니다.
      */
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "0 0 18 * * *")
     public void deleteOldAccessLogs() {
         accessLogService.deleteOldLogs();
     }
