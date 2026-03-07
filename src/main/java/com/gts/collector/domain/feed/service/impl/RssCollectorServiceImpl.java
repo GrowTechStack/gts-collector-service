@@ -22,14 +22,19 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.io.ByteArrayInputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -46,6 +51,9 @@ public class RssCollectorServiceImpl implements RssCollectorService {
 
     /** HTTP 요청 시 사용하는 User-Agent (일부 사이트의 봇 차단 우회) */
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 GrowTechStackBot/1.0";
+
+    /** 허용된 태그 목록 (tags 테이블과 동기화) */
+    private static final Set<String> VALID_TAGS = Set.of("ai", "backend", "frontend", "design", "devops", "architecture", "etc");
 
     private final ContentRepository contentRepository;
     private final SummaryRequestProducer summaryRequestProducer;
@@ -69,15 +77,17 @@ public class RssCollectorServiceImpl implements RssCollectorService {
             connection.setConnectTimeout(10000);
             connection.setReadTimeout(15000);
 
-            SyndFeed feed = new SyndFeedInput().build(new XmlReader(connection));
+            byte[] rawXml = connection.getInputStream().readNBytes(10 * 1024 * 1024);
+            String xmlStr = preprocessXml(new String(rawXml, StandardCharsets.UTF_8));
+            SyndFeed feed = new SyndFeedInput().build(new XmlReader(
+                    new ByteArrayInputStream(xmlStr.getBytes(StandardCharsets.UTF_8))));
             List<SyndEntry> entries = feed.getEntries();
 
             for (SyndEntry entry : entries) {
-                if (since != null && entry.getPublishedDate() != null) {
-                    LocalDateTime publishedAt = entry.getPublishedDate().toInstant()
-                            .atZone(ZoneId.systemDefault()).toLocalDateTime();
-                    if (publishedAt.isBefore(since)) {
-                        log.debug("[{}] 날짜 필터 스킵: publishedAt={}, since={}", siteName, publishedAt, since);
+                if (since != null) {
+                    LocalDateTime entryDate = resolveEntryDate(entry);
+                    if (entryDate != null && entryDate.isBefore(since)) {
+                        log.debug("[{}] 날짜 필터 스킵: entryDate={}, since={}", siteName, entryDate, since);
                         continue;
                     }
                 }
@@ -124,12 +134,12 @@ public class RssCollectorServiceImpl implements RssCollectorService {
 
         if (existingContent.isPresent()) {
             Content content = existingContent.get();
-            // TODO: H2 파일 모드에서 dirty checking 및 명시적 save() 호출 시에도 업데이트가 반영되지 않는 문제 있음
-            //       MySQL로 DB 전환 후 정상 동작 여부 재확인 및 적용 필요
-            if (content.getThumbnailUrl() == null && thumbnailUrl != null) {
+            boolean thumbnailUpdate = content.getThumbnailUrl() == null && thumbnailUrl != null;
+            boolean tagsUpdate = hasInvalidTags(content.getTags());
+            if (thumbnailUpdate || tagsUpdate) {
                 content.updateMetadata(siteName, tags, thumbnailUrl);
                 contentRepository.save(content);
-                return true;
+                return thumbnailUpdate;
             }
             return false;
         }
@@ -146,8 +156,7 @@ public class RssCollectorServiceImpl implements RssCollectorService {
                 .siteName(siteName)
                 .thumbnailUrl(thumbnailUrl)
                 .tags(tags)
-                .publishedAt(entry.getPublishedDate() != null ?
-                        entry.getPublishedDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : null)
+                .publishedAt(resolveEntryDate(entry))
                 .commentEnabled(false)
                 .build();
 
@@ -266,22 +275,52 @@ public class RssCollectorServiceImpl implements RssCollectorService {
      * 아무것도 해당하지 않으면 'tech'를 기본 태그로 사용합니다.
      */
     private String extractTags(SyndEntry entry) {
-        String categories = entry.getCategories().stream()
-                .map(category -> category.getName().toLowerCase())
-                .collect(Collectors.joining(","));
+        String categoryText = entry.getCategories().stream()
+                .map(category -> category.getName())
+                .collect(Collectors.joining(" "));
 
-        if (!categories.isEmpty()) return categories;
-
-        String contentText = (entry.getTitle() + " " +
+        String contentText = (entry.getTitle() + " " + categoryText + " " +
                 (entry.getDescription() != null ? entry.getDescription().getValue() : "")).toLowerCase();
 
         StringBuilder autoTags = new StringBuilder();
-        if (contentText.contains("backend") || contentText.contains("server") || contentText.contains("spring")) autoTags.append("backend,");
-        if (contentText.contains("frontend") || contentText.contains("react") || contentText.contains("javascript")) autoTags.append("frontend,");
-        if (contentText.contains("ai") || contentText.contains("ml") || contentText.contains("data")) autoTags.append("ai,");
-        if (contentText.contains("design") || contentText.contains("ui") || contentText.contains("ux")) autoTags.append("design,");
+        if (contentText.contains("backend") || contentText.contains("server") || contentText.contains("spring") || contentText.contains("api") || contentText.contains("database") || contentText.contains("db")) autoTags.append("backend,");
+        if (contentText.contains("frontend") || contentText.contains("react") || contentText.contains("javascript") || contentText.contains("typescript") || contentText.contains("css") || contentText.contains("html") || contentText.contains("vue") || contentText.contains("웹")) autoTags.append("frontend,");
+        if (contentText.contains("ai") || contentText.contains("ml") || contentText.contains("llm") || contentText.contains("gpt") || contentText.contains("머신러닝") || contentText.contains("딥러닝") || contentText.contains("machine learning")) autoTags.append("ai,");
+        if (contentText.contains("design") || contentText.contains("ui") || contentText.contains("ux") || contentText.contains("디자인")) autoTags.append("design,");
+        if (contentText.contains("devops") || contentText.contains("docker") || contentText.contains("kubernetes") || contentText.contains("k8s") || contentText.contains("ci/cd") || contentText.contains("pipeline") || contentText.contains("배포") || contentText.contains("인프라")) autoTags.append("devops,");
+        if (contentText.contains("architecture") || contentText.contains("아키텍처") || contentText.contains("microservice") || contentText.contains("msa") || contentText.contains("설계") || contentText.contains("시스템")) autoTags.append("architecture,");
 
-        return autoTags.length() > 0 ? autoTags.substring(0, autoTags.length() - 1) : "tech";
+        return autoTags.length() > 0 ? autoTags.substring(0, autoTags.length() - 1) : "etc";
+    }
+
+    /**
+     * RSS 엔트리의 날짜를 반환합니다.
+     * publishedDate가 없으면 updatedDate를 fallback으로 사용합니다. (Atom 피드 대응)
+     */
+    private LocalDateTime resolveEntryDate(SyndEntry entry) {
+        Date date = entry.getPublishedDate() != null ? entry.getPublishedDate() : entry.getUpdatedDate();
+        return date != null ? date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : null;
+    }
+
+    /**
+     * 저장된 태그가 유효하지 않은 값을 포함하는지 확인합니다.
+     * VALID_TAGS에 없는 태그가 하나라도 있으면 true를 반환합니다.
+     */
+    private boolean hasInvalidTags(String tags) {
+        if (tags == null || tags.isBlank()) return true;
+        return Arrays.stream(tags.split(","))
+                .map(String::trim)
+                .anyMatch(tag -> !VALID_TAGS.contains(tag));
+    }
+
+    /**
+     * RSS XML 전처리:
+     * 1. XML 1.0에서 허용되지 않는 제어 문자 제거 (일부 피드에 0x08 등이 포함되어 파싱 실패)
+     * 2. RFC 2822 날짜에 타임존 누락 시 +0000 추가 (Devocean 등)
+     */
+    private String preprocessXml(String xml) {
+        String cleaned = xml.replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]", "");
+        return cleaned.replaceAll("(\\d{2}:\\d{2}:\\d{2})(\\s*</(pubDate|updated)>)", "$1 +0000$2");
     }
 
     /**

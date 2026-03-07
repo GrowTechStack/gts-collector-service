@@ -64,6 +64,12 @@ CREATE TABLE IF NOT EXISTS comments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 태그 테이블
+CREATE TABLE IF NOT EXISTS tags (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
 -- 인덱스 설정
 CREATE INDEX IF NOT EXISTS idx_contents_type ON contents(type);
 CREATE INDEX IF NOT EXISTS idx_contents_published_at ON contents(published_at);
