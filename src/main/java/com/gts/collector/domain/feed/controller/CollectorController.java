@@ -43,10 +43,13 @@ public class CollectorController {
     /**
      * 특정 RSS 출처 하나로부터 콘텐츠를 즉시 수집합니다.
      */
-    @Operation(summary = "단건 수집 실행", description = "특정 RSS 출처 ID로부터 콘텐츠를 즉시 수집합니다.")
+    @Operation(summary = "단건 수집 실행", description = "특정 RSS 출처 ID로부터 콘텐츠를 즉시 수집합니다. full=true 시 전체 수집, 기본값은 최근 2일치만 수집합니다.")
     @PostMapping("/collect/{sourceId}")
-    public ApiResult<Integer> collectOne(@PathVariable Long sourceId) {
-        return ApiResult.success(collectorService.collectOne(sourceId));
+    public ApiResult<Integer> collectOne(
+            @PathVariable Long sourceId,
+            @Parameter(description = "true면 전체 수집, false(기본값)면 최근 2일치만 수집")
+            @RequestParam(defaultValue = "false") boolean full) {
+        return ApiResult.success(collectorService.collectOne(sourceId, full));
     }
 
     @Operation(summary = "수집 상태 조회", description = "현재 RSS 수집 활성화 여부를 반환합니다.")

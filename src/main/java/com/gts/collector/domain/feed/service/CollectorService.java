@@ -13,11 +13,12 @@ public interface CollectorService {
     int collectAll(boolean full);
 
     /**
-     * 특정 RSS 출처 하나로부터 콘텐츠를 즉시 수집합니다. (전체 수집)
+     * 특정 RSS 출처 하나로부터 콘텐츠를 즉시 수집합니다.
      * @param sourceId 수집할 RSS 출처 ID
+     * @param full true면 전체 수집, false면 최근 2일치만 수집
      * @return 수집된 콘텐츠 개수
      */
-    int collectOne(Long sourceId);
+    int collectOne(Long sourceId, boolean full);
 
     /**
      * 요약이 없는 기존 콘텐츠에 대해 AI 요약 요청을 재전송합니다.

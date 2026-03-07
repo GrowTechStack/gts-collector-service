@@ -100,7 +100,7 @@ public class CollectorServiceImpl implements CollectorService {
      */
     @Override
     @Transactional
-    public int collectOne(Long sourceId) {
+    public int collectOne(Long sourceId, boolean full) {
         if (!collectionStatus.isRunning()) {
             log.info("RSS 수집이 중지 상태입니다. collectOne 실행 생략.");
             return 0;
@@ -108,7 +108,7 @@ public class CollectorServiceImpl implements CollectorService {
         RssSource source = rssSourceRepository.findById(sourceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RSS_SOURCE_NOT_FOUND));
 
-        log.info("===== 단건 RSS 수집 시작 | 사이트={} =====", source.getSiteName());
+        log.info("===== 단건 RSS 수집 시작 | 사이트={}, 모드={} =====", source.getSiteName(), full ? "전체" : "최근 2일");
 
         LocalDateTime startTime = LocalDateTime.now();
         int collectedCount = 0;
@@ -116,8 +116,9 @@ public class CollectorServiceImpl implements CollectorService {
         String errorMessage = null;
 
         try {
-            log.info("[수집 시작] 사이트={}, URL={} (전체 수집)", source.getSiteName(), source.getRssUrl());
-            collectedCount = rssCollectorService.collect(source.getRssUrl(), source.getSiteName(), null);
+            LocalDateTime since = full ? null : LocalDateTime.now().minusDays(2);
+            log.info("[수집 시작] 사이트={}, URL={}, since={}", source.getSiteName(), source.getRssUrl(), since);
+            collectedCount = rssCollectorService.collect(source.getRssUrl(), source.getSiteName(), since);
             success = true;
             log.info("[수집 성공] 사이트={}, 수집건수={}", source.getSiteName(), collectedCount);
         } catch (BusinessException e) {
