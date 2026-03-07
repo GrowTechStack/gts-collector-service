@@ -23,6 +23,9 @@ public class AccessLog {
     @Column(name = "hashed_ip", nullable = false, length = 64)
     private String hashedIp;
 
+    @Column(name = "raw_ip", length = 45)
+    private String rawIp;
+
     @Column(name = "path", length = 255)
     private String path;
 
@@ -30,8 +33,9 @@ public class AccessLog {
     private LocalDateTime createdAt;
 
     @Builder
-    private AccessLog(String hashedIp, String path, LocalDateTime createdAt) {
+    private AccessLog(String hashedIp, String rawIp, String path, LocalDateTime createdAt) {
         this.hashedIp = hashedIp;
+        this.rawIp = rawIp;
         this.path = path;
         this.createdAt = createdAt;
     }

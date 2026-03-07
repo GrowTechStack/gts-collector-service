@@ -1,5 +1,6 @@
 package com.gts.collector.domain.log.service.impl;
 
+import com.gts.collector.domain.log.dto.AccessLogResponse;
 import com.gts.collector.domain.log.dto.AccessStatsResponse;
 import com.gts.collector.domain.log.entity.AccessLog;
 import com.gts.collector.domain.log.repository.AccessLogRepository;
@@ -10,9 +11,12 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.PageRequest;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -25,9 +29,10 @@ public class AccessLogServiceImpl implements AccessLogService {
     @Async
     @Override
     @Transactional
-    public void record(String hashedIp, String path) {
+    public void record(String hashedIp, String rawIp, String path) {
         accessLogRepository.save(AccessLog.builder()
                 .hashedIp(hashedIp)
+                .rawIp(rawIp)
                 .path(path)
                 .createdAt(LocalDateTime.now())
                 .build());
@@ -45,6 +50,14 @@ public class AccessLogServiceImpl implements AccessLogService {
         long monthUv = accessLogRepository.countDistinctIpSince(monthStart);
 
         return new AccessStatsResponse(activeNow, todayUv, monthUv);
+    }
+
+    @Override
+    public List<AccessLogResponse> getRecentLogs() {
+        return accessLogRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, 100))
+                .stream()
+                .map(AccessLogResponse::from)
+                .toList();
     }
 
     @Override

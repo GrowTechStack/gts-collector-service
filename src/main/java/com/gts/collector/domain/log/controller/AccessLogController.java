@@ -1,5 +1,6 @@
 package com.gts.collector.domain.log.controller;
 
+import com.gts.collector.domain.log.dto.AccessLogResponse;
 import com.gts.collector.domain.log.dto.AccessStatsResponse;
 import com.gts.collector.domain.log.service.AccessLogService;
 import com.gts.collector.global.common.response.ApiResult;
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @Tag(name = "AccessLog", description = "접속 통계 API")
 @RestController
@@ -22,5 +25,11 @@ public class AccessLogController {
     @GetMapping("/stats")
     public ApiResult<AccessStatsResponse> getStats() {
         return ApiResult.success(accessLogService.getStats());
+    }
+
+    @Operation(summary = "최근 접속 로그 조회", description = "최근 100건의 접속 로그를 반환합니다.")
+    @GetMapping("/recent")
+    public ApiResult<List<AccessLogResponse>> getRecentLogs() {
+        return ApiResult.success(accessLogService.getRecentLogs());
     }
 }

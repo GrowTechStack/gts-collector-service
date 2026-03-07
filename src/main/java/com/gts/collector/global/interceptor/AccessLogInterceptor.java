@@ -10,6 +10,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -25,6 +26,10 @@ public class AccessLogInterceptor implements HandlerInterceptor {
             "/v3/api-docs"
     };
 
+    private static final Set<String> LOOPBACK_IPS = Set.of(
+            "127.0.0.1", "0:0:0:0:0:0:0:1", "::1"
+    );
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (!"GET".equals(request.getMethod())) {
@@ -39,7 +44,10 @@ public class AccessLogInterceptor implements HandlerInterceptor {
         }
 
         String ip = extractIp(request);
-        accessLogService.record(hashIp(ip), path);
+        if (LOOPBACK_IPS.contains(ip)) {
+            return true;
+        }
+        accessLogService.record(hashIp(ip), ip, path);
         return true;
     }
 
