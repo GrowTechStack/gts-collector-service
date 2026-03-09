@@ -1,0 +1,8 @@
+language: "ko"
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+  request_changes_workflow: false
+  tone_instructions: "친절하게 리뷰해줘"
+  poem: false
