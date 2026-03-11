@@ -25,4 +25,14 @@ public interface CollectorService {
      * @return 요약 요청을 보낸 콘텐츠 개수
      */
     int resummary();
+
+    /**
+     * 본문이 누락된 전체 콘텐츠들의 본문을 재수집하고 AI 요약을 요청합니다.
+     */
+    int reCollectAllMissingBodies();
+
+    /**
+     * 특정 사이트의 본문이 누락된 콘텐츠들의 본문을 재수집하고 AI 요약을 요청합니다.
+     */
+    int reCollectMissingBodiesBySource(Long sourceId);
 }

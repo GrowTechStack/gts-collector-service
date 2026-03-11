@@ -139,6 +139,7 @@ public class CollectorServiceImpl implements CollectorService {
      * 요약이 없는 기존 콘텐츠에 대해 AI 요약 요청을 재전송합니다.
      */
     @Override
+    @Transactional
     public int resummary() {
         List<Content> targets = contentRepository.findAllBySummaryIsNullAndBodyIsNotNull();
         log.info("===== 미요약 콘텐츠 재요약 시작 | 대상={}건 =====", targets.size());
@@ -155,6 +156,18 @@ public class CollectorServiceImpl implements CollectorService {
         }
         log.info("===== 미요약 콘텐츠 재요약 완료 | 요청={}건 =====", count);
         return count;
+    }
+
+    @Override
+    @Transactional
+    public int reCollectAllMissingBodies() {
+        return rssCollectorService.reCollectAllMissingBodies();
+    }
+
+    @Override
+    @Transactional
+    public int reCollectMissingBodiesBySource(Long sourceId) {
+        return rssCollectorService.reCollectMissingBodiesBySource(sourceId);
     }
 
     /**

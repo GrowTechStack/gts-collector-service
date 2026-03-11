@@ -77,4 +77,16 @@ public class CollectorController {
     public ApiResult<Integer> resummary() {
         return ApiResult.success(collectorService.resummary());
     }
+
+    @Operation(summary = "누락 본문 전체 재수집", description = "본문(body)이 없는 모든 콘텐츠의 본문을 RSS로부터 재수집하고 AI 요약을 요청합니다.")
+    @PostMapping("/recollect-bodies")
+    public ApiResult<Integer> reCollectAllBodies() {
+        return ApiResult.success(collectorService.reCollectAllMissingBodies());
+    }
+
+    @Operation(summary = "특정 사이트 누락 본문 재수집", description = "특정 사이트의 본문(body)이 없는 콘텐츠의 본문을 RSS로부터 재수집하고 AI 요약을 요청합니다.")
+    @PostMapping("/recollect-bodies/{sourceId}")
+    public ApiResult<Integer> reCollectBodiesBySource(@PathVariable Long sourceId) {
+        return ApiResult.success(collectorService.reCollectMissingBodiesBySource(sourceId));
+    }
 }

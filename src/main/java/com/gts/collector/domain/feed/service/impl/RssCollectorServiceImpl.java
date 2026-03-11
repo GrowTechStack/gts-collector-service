@@ -3,6 +3,8 @@ package com.gts.collector.domain.feed.service.impl;
 import com.gts.collector.domain.content.entity.Content;
 import com.gts.collector.domain.content.entity.ContentType;
 import com.gts.collector.domain.content.repository.ContentRepository;
+import com.gts.collector.domain.feed.entity.RssSource;
+import com.gts.collector.domain.feed.repository.RssSourceRepository;
 import com.gts.collector.domain.feed.service.RssCollectorService;
 import com.gts.collector.global.kafka.SummaryRequestProducer;
 import com.gts.collector.global.error.ErrorCode;
@@ -56,6 +58,7 @@ public class RssCollectorServiceImpl implements RssCollectorService {
     private static final Set<String> VALID_TAGS = Set.of("ai", "backend", "frontend", "design", "devops", "architecture", "etc");
 
     private final ContentRepository contentRepository;
+    private final RssSourceRepository rssSourceRepository;
     private final SummaryRequestProducer summaryRequestProducer;
 
     /**
@@ -118,6 +121,80 @@ public class RssCollectorServiceImpl implements RssCollectorService {
         }
     }
 
+    @Override
+    @Transactional
+    public int reCollectAllMissingBodies() {
+        log.info("Starting re-collection of all missing bodies");
+        List<RssSource> sources = rssSourceRepository.findAllByActiveTrue();
+        int totalUpdated = 0;
+        for (RssSource source : sources) {
+            totalUpdated += reCollectMissingBodiesBySource(source.getId());
+        }
+        return totalUpdated;
+    }
+
+    @Override
+    @Transactional
+    public int reCollectMissingBodiesBySource(Long siteId) {
+        RssSource source = rssSourceRepository.findById(siteId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RSS_SOURCE_NOT_FOUND));
+        
+        log.info("Starting re-collection of missing bodies for site: {}", source.getSiteName());
+        List<Content> missingContents = contentRepository.findAllBySiteNameAndBodyIsEmpty(source.getSiteName());
+        
+        if (missingContents.isEmpty()) return 0;
+
+        int updatedCount = 0;
+        try {
+            SyndFeed feed = fetchFeed(source.getRssUrl());
+            for (SyndEntry entry : feed.getEntries()) {
+                String link = entry.getLink();
+                Optional<Content> targetOpt = missingContents.stream()
+                        .filter(c -> c.getOriginalUrl().equals(link))
+                        .findFirst();
+
+                if (targetOpt.isPresent()) {
+                    Content content = targetOpt.get();
+                    String newBody = extractBody(entry);
+                    if (!newBody.isBlank()) {
+                        content.updateBody(newBody);
+                        contentRepository.save(content);
+                        
+                        // 본문 수집 성공 시 AI 요약 요청 발송
+                        String bodyForSummary = newBody.length() > 3000 ? newBody.substring(0, 3000) : newBody;
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                summaryRequestProducer.send(content.getId(), content.getTitle(), bodyForSummary);
+                            }
+                        });
+                        
+                        updatedCount++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to fetch feed for re-collection: site={}, error={}", source.getSiteName(), e.getMessage());
+        }
+
+        log.info("Finished re-collection for {}. Updated {} items.", source.getSiteName(), updatedCount);
+        return updatedCount;
+    }
+
+    private SyndFeed fetchFeed(String rssUrl) throws Exception {
+        HttpURLConnection connection = (HttpURLConnection) new URL(rssUrl).openConnection();
+        connection.setRequestProperty("User-Agent", USER_AGENT);
+        connection.setConnectTimeout(10000);
+        connection.setReadTimeout(15000);
+
+        byte[] rawXml = connection.getInputStream().readNBytes(10 * 1024 * 1024);
+        String xmlStr = preprocessXml(new String(rawXml, StandardCharsets.UTF_8));
+        connection.disconnect();
+        
+        return new SyndFeedInput().build(new XmlReader(
+                new ByteArrayInputStream(xmlStr.getBytes(StandardCharsets.UTF_8))));
+    }
+
     /**
      * RSS 엔트리를 Content로 저장하거나, 기존 콘텐츠의 썸네일을 업데이트합니다.
      * - 신규 URL: 새로 저장 후 true 반환
@@ -144,7 +221,7 @@ public class RssCollectorServiceImpl implements RssCollectorService {
             return false;
         }
 
-        String rawBody = entry.getDescription() != null ? stripHtml(entry.getDescription().getValue()) : "";
+        String rawBody = extractBody(entry);
         String body = rawBody.isBlank() ? null : rawBody;
 
         Content content = Content.builder()
@@ -173,6 +250,32 @@ public class RssCollectorServiceImpl implements RssCollectorService {
             });
         }
         return true;
+    }
+
+    /**
+     * RSS 엔트리에서 본문 텍스트를 추출합니다.
+     * 1. Description 태그 확인
+     * 2. Description이 없거나 너무 짧으면 content:encoded (SyndEntry.getContents()) 확인
+     */
+    private String extractBody(SyndEntry entry) {
+        String description = entry.getDescription() != null ? entry.getDescription().getValue() : "";
+        String encodedContent = "";
+
+        if (entry.getContents() != null && !entry.getContents().isEmpty()) {
+            encodedContent = entry.getContents().stream()
+                    .map(content -> content.getValue())
+                    .collect(Collectors.joining(" "));
+        }
+
+        // 둘 중 더 긴 내용을 선택 (보통 content:encoded가 더 상세함)
+        String targetHtml = description.length() > encodedContent.length() ? description : encodedContent;
+        
+        // 만약 둘 다 너무 짧으면(예: 50자 미만) 합쳐서 시도
+        if (targetHtml.length() < 50) {
+            targetHtml = description + " " + encodedContent;
+        }
+
+        return stripHtml(targetHtml);
     }
 
     /**

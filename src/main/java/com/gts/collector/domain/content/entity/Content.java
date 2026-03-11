@@ -84,6 +84,13 @@ public class Content {
     }
 
     /**
+     * 콘텐츠 본문 내용을 업데이트합니다.
+     */
+    public void updateBody(String body) {
+        this.body = body;
+    }
+
+    /**
      * 메타데이터(사이트명, 태그, 썸네일)를 업데이트합니다.
      */
     public void updateMetadata(String siteName, String tags, String thumbnailUrl) {

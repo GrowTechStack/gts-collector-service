@@ -15,4 +15,17 @@ public interface RssCollectorService {
      * @return 새로 저장된 콘텐츠 개수
      */
     int collect(String rssUrl, String siteName, LocalDateTime since);
+
+    /**
+     * 본문이 누락된 전체 콘텐츠들의 본문을 재수집합니다.
+     * @return 재수집 성공 개수
+     */
+    int reCollectAllMissingBodies();
+
+    /**
+     * 특정 사이트의 본문이 누락된 콘텐츠들의 본문을 재수집합니다.
+     * @param siteId RSS 출처 ID
+     * @return 재수집 성공 개수
+     */
+    int reCollectMissingBodiesBySource(Long siteId);
 }
